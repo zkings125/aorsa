@@ -27,7 +27,15 @@ c      use zfun_hilbert
 
       implicit none
 
-      integer, parameter :: real32=selected_real_kind(6,37)
+      ! for pgplot
+      integer, parameter :: real32=selected_real_kind(6,37)      
+      ! constants
+      real, parameter ::  q = 1.6e-19, qe = -q
+      complex, parameter :: zi = cmplx(0.0,1.0)
+      real, parameter :: eps0 = 8.85e-12, pi = 3.141592654,
+     &     twopi = 2.0 * pi,
+     &     xmu0 = 1.26e-06, clight = 1.0 / sqrt(eps0 * xmu0)
+
       complex :: l2norm_res, l2norm_rhs
       integer :: ieer ! fft error flag
       integer :: n_theta_max, n_theta, n_psi_max, nt, k, nbessj
@@ -159,7 +167,7 @@ c      CHARACTER(128) :: root
       parameter (n_theta_max = 200)
       parameter (n_psi_max = 200)
 
-      parameter (nxmx = nmodesmax)
+      parameter (nxmx = nmodesmax) !from size_mod, but used to set lwork for scalapack
       parameter (nymx = mmodesmax)
 
       parameter (nlmx = 512)
@@ -178,6 +186,8 @@ c      CHARACTER(128) :: root
       parameter (nldim  = nxmx * nymx)
       parameter (nldim3 = 3 * nldim)
       parameter (ndfmax = nldim3)
+      parameter (lwork = ndfmax) !jcw temp
+      parameter (lrwork = ndfmax)
 
       parameter (lmaxdim = 99)
 
@@ -404,8 +414,8 @@ c     &        yy_inv(mkdim1 : mkdim2, 1 : nymx)
       real :: xkthrho, wphase, vsound, domgk, xkthdx, omgestar, rhoi10,
      &   v0i, vthi10, vthe, vthi, vphase, rhoi1overl, rnz, eta2,
      &   xk0, shearedge, eta1, xn1, xmi1, xmh, xme, qi1, xmi2,
-     &   xmi3, t0i, t0i2, t0i3, t0e, q, teedge, clight, xmu0, xlnlam,
-     &   omgci10, omgrf, xmax, qe, qi2, pi, twopi, eps0, qi3,
+     &   xmi3, t0i, t0i2, t0i3, t0e, teedge, clight, xmu0, xlnlam,
+     &   omgci10, omgrf, xmax, qi2, pi, twopi, eps0, qi3,
      &   costh, sinth, radius, rnx,  rny, rnphi
       real :: ymaxp, yminp, xminp, xmaxp
       real :: rhoi20, vthi20, omgci20
@@ -814,7 +824,7 @@ c     &        uzzk(nkdim1 : nkdim2, mkdim1 : mkdim2)
       complex, allocatable :: p_brhs(:), p_brhs_copy(:)
 
       real :: err_max,err,b_nrm2,err_nrm2
-      complex, dimension(ndfmax) ::brhs2,brhsk,brhs_tmp
+      complex, dimension(ndfmax) :: brhs2,brhsk,brhs_tmp
       integer :: icnc
       logical :: ismine, ismine1
 
@@ -865,7 +875,6 @@ c       integer, dimension(:,:,:), allocatable :: descbrhs_all
         real :: rho_thresh
 
 
-
         complex :: aij, beta
 c       complex, dimension(:,:), allocatable :: brhs
         real,    dimension(:,:), allocatable :: work
@@ -875,8 +884,12 @@ c       complex, dimension(:,:), allocatable :: Btmp
 
         complex, dimension(ndfmax) :: row,rowk
 
-        complex, dimension(ndfmax) :: workn
-        real, dimension(ndfmax) :: rwork
+!        complex, dimension(:), allocatable :: workn
+!        real, dimension(:), allocatable :: rwork
+        complex :: workn(lwork)
+        real :: rwork(lrwork)
+        
+        real :: srwork(2), sworkn(2)
         real :: pzlange, anorm, rcond
 
         logical, parameter :: use_fft = .true.
@@ -1225,9 +1238,6 @@ c      jdiag = nmodesy / 2
       call blacs_gridinfo( icontxt, nprow, npcol, myrow, mycol)
 
 
-
-
-
       if(nphi_sum_only .eqv. .true.)go to 9001
 
 *     ----------------
@@ -1433,22 +1443,15 @@ c      jequat  = nnodey / 2
       qi6 = z6 * q
       qi_slo = z_slo * q
 
-      qe = -q
-      zi = cmplx(0.0,1.0)
-      eps0 = 8.85e-12
-
-      pi = 3.141592654
-      twopi = 2.0 * pi
-
       xlnlam = 20.0
-      xmu0 = 1.26e-06
-      clight = 1.0 / sqrt(eps0 * xmu0)
 
-
-      xkphi0 = nphi / rt_init
-      xkphia = nphi / rant
-      if(xkphi0 .eq. 0.0)xkphi0 = 1.0e-05
-
+      if (nphi==0) then
+         xkphi0 = 1.0e-5
+         xkphia = 1.0e-5
+      else
+         xkphi0 = nphi / (rt_init+1.e-5)  !JCW fix better. cylindrical equations at the origin
+         xkphia = nphi / (rant+1e-5)
+      end if
 
       xnurf = freqcy
 
@@ -1743,9 +1746,9 @@ c         write(6, 7017)rhoi10
          write(6, 1814)xn2
          write(6, 1834)xn3
 
-         write(6, 1012)omgrf
-         write(6, 1009)xnurf
-         write(6, 1013)nphi
+         write(6, 2222) 'omgrf',    omgrf,'hertz' !1012
+         write(6, 2222) 'frequency',xnurf,'hertz' !1009
+         write(6, 2223) 'nphi',     nphi, ' '     !1013
          write(6, 1321)wphase
          write(6, 1322)vphase
          write(6, 1323)vthe
@@ -5177,6 +5180,7 @@ c           call flush
       allocate(p_amat(p_amat_dim))
       p_amat(:) = cmplx(0.0,0.0)
 
+
       if(write_for_azzam)then
         allocate(p_amat_copy(p_amat_dim))
         p_amat_copy(:) = cmplx(0.0,0.0)
@@ -5201,6 +5205,14 @@ c           call flush
         write(15,*) 'lld = ', lld
         stop '** error ** '
       endif
+      call pzgecon('1', nrow, p_amat, 1, 1, desc_amat, anorm, rcond,
+     &          sworkn, -1, srwork, -1, info)
+      write(*,*) 'pzgecon',sworkn(1),srwork(1),nxmx,desc_amat
+!      lwork = int(sworkn(1))
+!jcw temp      lrwork = int(srwork(1))
+
+!      allocate (workn(lwork))
+!      allocate (rwork(lrwork))
 
       do irnc=1,nrow_local*ncol_local
         p_amat(irnc) = cmplx(0., 0.)
@@ -6770,15 +6782,15 @@ c        call flush
 *       ------------------------------
 *       Optional: get condition number
 *       ------------------------------
-       lwork = ndfmax
-       lrwork = ndfmax
+!      lwork = ndfmax
+!      lrwork = ndfmax
       anorm = pzlange('1', nrow, ncol, p_amat, 1, 1, desc_amat, rwork)
       call pzgecon('1', nrow, p_amat, 1, 1, desc_amat, anorm, rcond,
      &          workn, lwork, rwork, lrwork, info)
 
       if (info.ne.0) then
-         write(6,*) 'pzgecon returns info = ', info
-         write(15,*) 'pzgecon returns info = ', info
+         write(6,*) 'pzgecon returns info = ', info,lwork,lrwork
+         write(15,*) 'pzgecon returns info = ', info,lwork,lrwork
          stop '** error ** '
       endif
 
@@ -11075,7 +11087,9 @@ c      write(6,*) "finished plots; starting deallocation"
      1   1p,e12.4," ohms     ")
  2013 format(3x,
      1   "2*pi*rt/Ly * imaginary part of impedance (reactance) = ",
-     1   1p,e12.4," ohms     ")
+     1     1p,e12.4," ohms     ")
+ 2222 format(3x,A18," = ",1pe12.4,1X,A)
+ 2223 format(3x,A18," = ",i12,1X,A)      
  1014 format(3x,"               xkz = ",1p,e12.4," m-1   ")
  1321 format(3x,"         vph / vth = ",1p,e12.4,"       ")
  1391 format(3x," critical shear(0) = ",1p,e12.4," s-1   ")
@@ -11752,6 +11766,8 @@ c         deallocate( ntable )
       deallocate (xkprl_a, P_a)
       deallocate (work)
       deallocate (workc)
+!      deallocate (workn)
+!      deallocate (rwork)
 
       if (myid .eq. 0) then
          close (963)
