@@ -20,6 +20,7 @@ ORBIT_F_WARNING_FLAGS =
 OBJ_FILES = \
  $(OBJ_DIR)/cauchy_mod.o \
  $(OBJ_DIR)/size_mod.o \
+ $(OBJ_DIR)/cbessel_mod.o \
  $(OBJ_DIR)/aorsa2din_mod.o \
  $(OBJ_DIR)/swim_global_data_mod.o \
  $(OBJ_DIR)/precision_mod.o \
@@ -146,8 +147,14 @@ ifeq ($(LSB_IS),Ubuntu)
     SYSTEM_IDENTIFIED = 1
   endif
 endif
-
-#$(error EXIT)
+ifeq ($(SLURM_CLUSTER_NAME),eofe7) #building on node
+  include makeopts.eofe7   #.intel
+  SYSTEM_IDENTIFIED = 1
+endif
+ifeq ($(HOSTNAME),eofe7.mit.edu)  #building on host
+  include makeopts.eofe7
+  SYSTEM_IDENTIFIED = 1
+endif
 
 ifeq ($(SYSTEM_IDENTIFIED),0)
   $(error No build configuration for this system)
@@ -215,7 +222,7 @@ $(OBJ_DIR)/orbit.o:          $(SRC_DIR)/orbit.f
 
 $(OBJ_DIR)/eqdsk_plot.o:     $(SRC_DIR)/eqdsk_plot.f90
 	                     $(COMPILE_r4) -o $(OBJ_DIR)/eqdsk_plot.o \
-                             $(SRC_DIR)/eqdsk_plot.f90 $(INCLUDE_DIRS) $(WARNING_FLAGS)				     
+                             $(SRC_DIR)/eqdsk_plot.f90 $(INCLUDE_DIRS) $(WARNING_FLAGS)
 
 $(OBJ_DIR)/fieldws.o:        $(SRC_DIR)/fieldws.f
 	                     $(COMPILE_r4) -o $(OBJ_DIR)/fieldws.o \
