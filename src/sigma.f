@@ -266,7 +266,7 @@ c      if(ndist .eq. 0)then
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (0) then
+         if (.false.) then
          if(rgamma .ge. 1.0e-08)
      .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
 
@@ -866,7 +866,7 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (0) then
+         if (.false.) then
          if(rgamma .ge. 1.0e-08)
      .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
 
@@ -1162,7 +1162,7 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (0) then
+         if (.false.) then
          if(rgamma .ge. 1.0e-08)
      .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
 
@@ -1748,7 +1748,7 @@ c         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (0) then
+         if (.false.) then
          if(rgamma .ge. 1.0e-08)
      .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
 
@@ -2371,7 +2371,7 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
 
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (0) then
+         if (.false.) then
          if(rgamma .ge. 1.0e-08)
      .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
 
@@ -2977,7 +2977,7 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
 
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (0) then
+         if (.false.) then
          if(rgamma .ge. 1.0e-08)
      .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
 
