@@ -186,8 +186,8 @@ c      CHARACTER(128) :: root
       parameter (nldim  = nxmx * nymx)
       parameter (nldim3 = 3 * nldim)
       parameter (ndfmax = nldim3)
-      parameter (lwork = ndfmax) !jcw temp
-      parameter (lrwork = ndfmax)
+!      parameter (lwork = ndfmax) !jcw temp
+!      parameter (lrwork = ndfmax)
 
       parameter (lmaxdim = 99)
 
@@ -884,11 +884,14 @@ c       complex, dimension(:,:), allocatable :: Btmp
 
         complex, dimension(ndfmax) :: row,rowk
 
-!        complex, dimension(:), allocatable :: workn
-!        real, dimension(:), allocatable :: rwork
-        complex :: workn(lwork)
-        real :: rwork(lrwork)
-        
+!if static
+!        complex :: workn(lwork)
+!        real :: rwork(lrwork)
+!else
+        complex, dimension(:), allocatable :: workn
+        real, dimension(:), allocatable :: rwork
+!fi
+
         real :: srwork(2), sworkn(2)
         real :: pzlange, anorm, rcond
 
@@ -4267,6 +4270,7 @@ c                 xkti2(i,j) = xkti3(i,j)
          eta6 = xn60 / xn00
          eta_slo = xn_slo0 / xn00
 
+         xn1 = xn10 !JCW for valfven
       end if
 
 *     --------------------------
@@ -4289,11 +4293,11 @@ c     write (6, *) "xmi1 = ", xmi1
       kperprhoi4 = 0.0
       kperprhoi5 = 0.0
 
-      if (eta1 .ne. 0.0) kperprhoi1 = kalfven * rhoi10
-      if (eta2 .ne. 0.0) kperprhoi2 = kalfven * rhoi20
-      if (eta3 .ne. 0.0) kperprhoi3 = kalfven * rhoi30
-      if (eta4 .ne. 0.0) kperprhoi4 = kalfven * rhoi40
-      if (eta5 .ne. 0.0) kperprhoi5 = kalfven * rhoi50
+      if (eta1 >= 100.*epsilon(eta1)) kperprhoi1 = kalfven * rhoi10
+      if (eta2 >= 100.*epsilon(eta1)) kperprhoi2 = kalfven * rhoi20
+      if (eta3 >= 100.*epsilon(eta1)) kperprhoi3 = kalfven * rhoi30
+      if (eta4 >= 100.*epsilon(eta1)) kperprhoi4 = kalfven * rhoi40
+      if (eta5 >= 100.*epsilon(eta1)) kperprhoi5 = kalfven * rhoi50
 
 
 *     -----------
@@ -4426,7 +4430,7 @@ c     &                             + pressi4 pressi5 + pressi6
             xnuii = 2.859e-27 * xn1a(i,j) * xlnlam /
      &                      (sqrt(xmi1) * (xkti(i,j)/q)**1.5)
 
-            if(xnuii .ne. 0.0)then
+            if(xnuii >= 100.*epsilon(eta1))then
 
                vthi0 = sqrt(2.0 * xkti(i,j) / xmi1)
                vthe0 = sqrt(2.0 * xkte(i,j) / xme)
@@ -5203,17 +5207,21 @@ c           call flush
         write(6,*) 'lld = ', lld
         write(15,*) '** descinit for amat returns info = ', info
         write(15,*) 'lld = ', lld
+        write(6,*) 'nrow,mb: ',nrow,mb
+        write(6,*) 'pzgecon args', nrow,anorm,rcond
         stop '** error ** '
       endif
+
+!if not static
       call pzgecon('1', nrow, p_amat, 1, 1, desc_amat, anorm, rcond,
      &          sworkn, -1, srwork, -1, info)
       write(*,*) 'pzgecon',sworkn(1),srwork(1),nxmx,desc_amat
-!      lwork = int(sworkn(1))
-!      lrwork = int(srwork(1)) !jcw temp
+      lwork = int(sworkn(1))
+      lrwork = int(srwork(1)) !jcw temp
 
-!      allocate (workn(lwork))
-!      allocate (rwork(lrwork))
-
+      allocate (workn(lwork))
+      allocate (rwork(lrwork))
+!fi
       do irnc=1,nrow_local*ncol_local
         p_amat(irnc) = cmplx(0., 0.)
       enddo
@@ -5739,6 +5747,7 @@ c               end if
 
                               sige3_new = 0.0
 
+!JCW called for maxwellian sigma=1
                               call sigmad_cql3d_e(i, j, n, m, rho(i,j),
      &                        rho_a,
      &                        gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
@@ -5963,7 +5972,7 @@ c               end if
      &                     xkalp, xkbet, xkprl)
 
 
-                        if (eta2 .ne. 0.0) then
+                        if (eta2 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d_2(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi2, qi2, xn2a(i,j), xnuomi,
@@ -6015,7 +6024,7 @@ c               end if
                         end if    !   eta2 .ne. 0.0
 
 
-                        if(eta3 .ne. 0.0) then
+                        if(eta3 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi3, qi3, xn3a(i,j), xnuomi,
@@ -6065,7 +6074,7 @@ c               end if
      &                     xkalp, xkbet, xkprl)
                         end if    !   eta3 .ne. 0.0
 
-                        if(eta4 .ne. 0.0) then
+                        if(eta4 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi4, qi4, xn4a(i,j), xnuomi,
@@ -6116,7 +6125,7 @@ c               end if
 
                         end if     !   eta4 .ne. 0.0
 
-                        if(eta5 .ne. 0.0) then
+                        if(eta5 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi5, qi5, xn5a(i,j), xnuomi,
@@ -6167,7 +6176,7 @@ c               end if
 
                         end if  !  eta5 .ne. 0.0
 
-                        if(eta6 .ne. 0.0) then
+                        if(eta6 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi6, qi6, xn6a(i,j), xnuomi,
@@ -6218,7 +6227,7 @@ c               end if
 
                         end if  !  eta6 .ne. 0.0
 
-                        if(eta_slo .ne. 0.0)
+                        if(eta_slo >= 100.*epsilon(eta1))
      &                  call sigmah_slow(i, j, n, m,
      &                  xmi_slo, qi_slo, xna_slo(i,j), xnuomi,
      &                  eslow, omgci_slo(i,j), omgp2_slo(i,j),
@@ -6273,7 +6282,7 @@ c               end if
      &                  delta0, zi, eps0, v0i, omgrf, xk0, kperp_max,
      &                  i_sav, j_sav)
 
-                        if(eta2 .ne. 0.0)
+                        if(eta2 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi2, qi2, xn2a(i,j), xnuomi,
      &                  xkti2(i,j), omgci2(i,j), omgp22(i,j),
@@ -6289,7 +6298,7 @@ c               end if
      &                  delta0, zi, eps0, v0i, omgrf, xk0, kperp_max,
      &                  i_sav, j_sav)
 
-                        if(eta3 .ne. 0.0)
+                        if(eta3 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi3, qi3, xn3a(i,j), xnuomi,
      &                  xkti3(i,j), omgci3(i,j), omgp32(i,j),
@@ -6306,7 +6315,7 @@ c               end if
      &                  i_sav, j_sav)
 
 
-                        if(eta4 .ne. 0.0)
+                        if(eta4 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi4, qi4, xn4a(i,j), xnuomi,
      &                  xkti4(i,j), omgci4(i,j), omgp42(i,j),
@@ -6322,7 +6331,7 @@ c               end if
      &                  delta0, zi, eps0, v0i, omgrf, xk0, kperp_max,
      &                  i_sav, j_sav)
 
-                        if(eta5 .ne. 0.0)
+                        if(eta5 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi5, qi5, xn5a(i,j), xnuomi,
      &                  xkti5(i,j), omgci5(i,j), omgp52(i,j),
@@ -6338,7 +6347,7 @@ c               end if
      &                  delta0, zi, eps0, v0i, omgrf, xk0, kperp_max,
      &                  i_sav, j_sav)
 
-                        if(eta6 .ne. 0.0)
+                        if(eta6 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi6, qi6, xn6a(i,j), xnuomi,
      &                  xkti6(i,j), omgci6(i,j), omgp62(i,j),
@@ -6720,7 +6729,7 @@ c        call flush
      &       desc_amat, incX )
 
         alpha = 1.0
-        if (norm2 .ne. 0.0) alpha = 1.0/norm2
+        if (norm2 >= 100.*epsilon(eta1)) alpha = 1.0/norm2
 
         call pzscal ( ncol, alpha, p_amat, global_row, global_col,
      &       desc_amat, incX )
@@ -6782,8 +6791,6 @@ c        call flush
 *       ------------------------------
 *       Optional: get condition number
 *       ------------------------------
-!      lwork = ndfmax
-!      lrwork = ndfmax
       anorm = pzlange('1', nrow, ncol, p_amat, 1, 1, desc_amat, rwork)
       call pzgecon('1', nrow, p_amat, 1, 1, desc_amat, anorm, rcond,
      &          workn, lwork, rwork, lrwork, info)
@@ -7614,7 +7621,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
 
 
-      if(eta2 .ne. 0.0) then
+      if(eta2 >= 100.*epsilon(eta1)) then
 
          call current_2(xjpx2, xjpy2, xjpz2, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7637,7 +7644,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
       endif
 
-      if(eta3 .ne. 0.0) then
+      if(eta3 >= 100.*epsilon(eta1)) then
 
          call current(xjpx3, xjpy3, xjpz3, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7660,7 +7667,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
       endif
 
-      if(eta4 .ne. 0.0) then
+      if(eta4 >= 100.*epsilon(eta1)) then
 
          call current(xjpx4, xjpy4, xjpz4, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7683,7 +7690,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
       endif
 
-      if(eta5 .ne. 0.0) then
+      if(eta5 >= 100.*epsilon(eta1)) then
 
          call current(xjpx5, xjpy5, xjpz5, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7706,7 +7713,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
       endif
 
-      if(eta6 .ne. 0.0) then
+      if(eta6 >= 100.*epsilon(eta1)) then
 
          call current(xjpx6, xjpy6, xjpz6, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7730,7 +7737,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
       endif
 
 
-      if(eta_slo .ne. 0.0)
+      if(eta_slo >= 100.*epsilon(eta1))
      &   call cur_slo(xj_slox, xj_sloy, xj_sloz, nxmx, nymx,
      &   nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7885,7 +7892,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       fqlavg_work = 0.0
 
 
-      if(eta2 .ne. 0.0)then
+      if(eta2 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i2(nuper, nupar, nnoderho) )
          allocate( cqlavg_i2(nuper, nupar, nnoderho) )
          allocate( eqlavg_i2(nuper, nupar, nnoderho) )
@@ -7896,7 +7903,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
          fqlavg_i2 = 0.0
       end if
 
-      if(eta3 .ne. 0.0)then
+      if(eta3 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i3(nuper, nupar, nnoderho) )
          allocate( cqlavg_i3(nuper, nupar, nnoderho) )
          allocate( eqlavg_i3(nuper, nupar, nnoderho) )
@@ -7907,7 +7914,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
          fqlavg_i3 = 0.0
       end if
 
-      if(eta4 .ne. 0.0)then
+      if(eta4 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i4(nuper, nupar, nnoderho) )
          allocate( cqlavg_i4(nuper, nupar, nnoderho) )
          allocate( eqlavg_i4(nuper, nupar, nnoderho) )
@@ -7918,7 +7925,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
          fqlavg_i4 = 0.0
       end if
 
-      if(eta5 .ne. 0.0)then
+      if(eta5 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i5(nuper, nupar, nnoderho) )
          allocate( cqlavg_i5(nuper, nupar, nnoderho) )
          allocate( eqlavg_i5(nuper, nupar, nnoderho) )
@@ -7929,7 +7936,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
          fqlavg_i5 = 0.0
       end if
 
-      if(eta6 .ne. 0.0)then
+      if(eta6 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i6(nuper, nupar, nnoderho) )
          allocate( cqlavg_i6(nuper, nupar, nnoderho) )
          allocate( eqlavg_i6(nuper, nupar, nnoderho) )
@@ -8086,7 +8093,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Minority ions -- !
       ! ------------------ !
 
-      if(eta2 .ne. 0.0)then
+      if(eta2 >= 100.*epsilon(eta1))then
       t1i2 = second1(dummy)
       call ql_myra_write(bqlavg_i2, cqlavg_i2, eqlavg_i2, fqlavg_i2,
      &   wdoti2, fx0i2, fy0i2, fz0i2, darea, nrhomax, nnoderho, drho,
@@ -8153,7 +8160,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Third ion species-- !
       ! --------------------- !
 
-      if(eta3 .ne. 0.0)then
+      if(eta3 >= 100.*epsilon(eta1))then
       t1i3 = second1(dummy)
       call ql_myra_write(bqlavg_i3, cqlavg_i3, eqlavg_i3, fqlavg_i3,
      &   wdoti3, fx0i3, fy0i3, fz0i3, darea, nrhomax, nnoderho, drho,
@@ -8222,7 +8229,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Fourth ion species-- !
       ! ---------------------- !
 
-      if(eta4 .ne. 0.0)then
+      if(eta4 >= 100.*epsilon(eta1))then
       t1i4 = second1(dummy)
       call ql_myra_write(bqlavg_i4, cqlavg_i4, eqlavg_i4, fqlavg_i4,
      &   wdoti4, fx0i4, fy0i4, fz0i4, darea, nrhomax, nnoderho, drho,
@@ -8289,7 +8296,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Fifth ion species-- !
       ! --------------------- !
 
-      if(eta5 .ne. 0.0)then
+      if(eta5 >= 100.*epsilon(eta1))then
       t1i5 = second1(dummy)
       call ql_myra_write(bqlavg_i5, cqlavg_i5, eqlavg_i5, fqlavg_i5,
      &   wdoti5, fx0i5, fy0i5, fz0i5, darea, nrhomax, nnoderho, drho,
@@ -8357,7 +8364,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Sixth ion species-- !
       ! --------------------- !
 
-      if(eta6 .ne. 0.0)then
+      if(eta6 >= 100.*epsilon(eta1))then
       t1i6 = second1(dummy)
       call ql_myra_write(bqlavg_i6, cqlavg_i6, eqlavg_i6, fqlavg_i6,
      &   wdoti6, fx0i6, fy0i6, fz0i6, darea, nrhomax, nnoderho, drho,
@@ -8473,7 +8480,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Minority ions -- !
       ! ------------------ !
 
-      if(eta2 .ne. 0.0)then
+      if(eta2 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti2_ql,
      &   nnoderho, nrhomax,
@@ -8492,7 +8499,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Third ion species-- !
       ! --------------------- !
 
-      if(eta3 .ne. 0.0)then
+      if(eta3 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti3_ql,
      &   nnoderho, nrhomax,
@@ -8509,7 +8516,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Fourth ion species-- !
       ! --------------------- !
 
-      if(eta4 .ne. 0.0)then
+      if(eta4 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti4_ql,
      &   nnoderho, nrhomax,
@@ -8526,7 +8533,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Fifth ion species-- !
       ! --------------------- !
 
-      if(eta5 .ne. 0.0)then
+      if(eta5 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti5_ql,
      &   nnoderho, nrhomax,
@@ -8543,7 +8550,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Sixth ion species-- !
       ! --------------------- !
 
-      if(eta6 .ne. 0.0)then
+      if(eta6 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti6_ql,
      &   nnoderho, nrhomax,
@@ -8715,7 +8722,7 @@ c     &                    + uzz(i, j) * xkphi(i)
 
             c_ehst = 0.0
 
-            if(xkte(i, j) .ne. 0.0) then
+            if(xkte(i, j) >= 100.*epsilon(eta1)) then
 
                xlnlam = 24. - alog(sqrt(xnea(i, j)
      &                     /1.e+06) / (xkte(i, j)/ abs(qe)))
@@ -8862,7 +8869,7 @@ c                 c_ehst = 1.0
       if(norm .eq. 3)powtot = pt_ql
 
 
-      if (powtot .ne. 0.0) pscale = prfin / powtot
+      if (powtot >= 100.*epsilon(eta1)) pscale = prfin / powtot
       if (powtot .eq. 0.0) pscale = 1.0
 
       if (prfin .eq. 0.0) pscale = 1.0
@@ -9066,35 +9073,35 @@ c                 c_ehst = 1.0
                eqlavg_i1(niu, miu, n) = eqlavg_i1(niu, miu, n) * pscale
                fqlavg_i1(niu, miu, n) = fqlavg_i1(niu, miu, n) * pscale
 
-               if(eta2 .ne. 0.0)then
+               if(eta2 >= 100.*epsilon(eta1))then
                bqlavg_i2(niu, miu, n) = bqlavg_i2(niu, miu, n) * pscale
                cqlavg_i2(niu, miu, n) = cqlavg_i2(niu, miu, n) * pscale
                eqlavg_i2(niu, miu, n) = eqlavg_i2(niu, miu, n) * pscale
                fqlavg_i2(niu, miu, n) = fqlavg_i2(niu, miu, n) * pscale
                end if
 
-               if(eta3 .ne. 0.0)then
+               if(eta3 >= 100.*epsilon(eta1))then
                bqlavg_i3(niu, miu, n) = bqlavg_i3(niu, miu, n) * pscale
                cqlavg_i3(niu, miu, n) = cqlavg_i3(niu, miu, n) * pscale
                eqlavg_i3(niu, miu, n) = eqlavg_i3(niu, miu, n) * pscale
                fqlavg_i3(niu, miu, n) = fqlavg_i3(niu, miu, n) * pscale
                end if
 
-               if(eta4 .ne. 0.0)then
+               if(eta4 >= 100.*epsilon(eta1))then
                bqlavg_i4(niu, miu, n) = bqlavg_i4(niu, miu, n) * pscale
                cqlavg_i4(niu, miu, n) = cqlavg_i4(niu, miu, n) * pscale
                eqlavg_i4(niu, miu, n) = eqlavg_i4(niu, miu, n) * pscale
                fqlavg_i4(niu, miu, n) = fqlavg_i4(niu, miu, n) * pscale
                end if
 
-               if(eta5 .ne. 0.0)then
+               if(eta5 >= 100.*epsilon(eta1))then
                bqlavg_i5(niu, miu, n) = bqlavg_i5(niu, miu, n) * pscale
                cqlavg_i5(niu, miu, n) = cqlavg_i5(niu, miu, n) * pscale
                eqlavg_i5(niu, miu, n) = eqlavg_i5(niu, miu, n) * pscale
                fqlavg_i5(niu, miu, n) = fqlavg_i5(niu, miu, n) * pscale
                end if
 
-               if(eta6 .ne. 0.0)then
+               if(eta6 >= 100.*epsilon(eta1))then
                bqlavg_i6(niu, miu, n) = bqlavg_i6(niu, miu, n) * pscale
                cqlavg_i6(niu, miu, n) = cqlavg_i6(niu, miu, n) * pscale
                eqlavg_i6(niu, miu, n) = eqlavg_i6(niu, miu, n) * pscale
@@ -9142,7 +9149,7 @@ c                 c_ehst = 1.0
          do niu = 1, nuper
             do miu = 1, nupar
 
-               if(xnavg(n) .ne. 0.0)then
+               if(xnavg(n) >= 100.*epsilon(eta1))then
                bqlavg_e(niu, miu, n) = bqlavg_e(niu, miu, n) / xnavg(n)
      &            * vce_cgs**4 * 100.
                cqlavg_e(niu, miu, n) = cqlavg_e(niu, miu, n) / xnavg(n)
@@ -9159,7 +9166,7 @@ c                 c_ehst = 1.0
                   fqlavg_e(niu, miu, n) = 0.
                end if
 
-               if(xn1avg(n) .ne. 0.0)then
+               if(xn1avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i1(niu, miu, n)= bqlavg_i1(niu, miu, n)/ xn1avg(n)
      &            * vc1_cgs**4 * 100.
                cqlavg_i1(niu, miu, n)= cqlavg_i1(niu, miu, n)/ xn1avg(n)
@@ -9176,8 +9183,8 @@ c                 c_ehst = 1.0
                   fqlavg_i1(niu, miu, n)= 0.
                end if
 
-               if(eta2 .ne. 0.0)then
-               if(xn2avg(n) .ne. 0.0)then
+               if(eta2 >= 100.*epsilon(eta1))then
+               if(xn2avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i2(niu, miu, n)= bqlavg_i2(niu, miu, n)/ xn2avg(n)
      &            * vc2_cgs**4 * 100.
                cqlavg_i2(niu, miu, n)= cqlavg_i2(niu, miu, n)/ xn2avg(n)
@@ -9196,8 +9203,8 @@ c                 c_ehst = 1.0
                end if
 
 
-               if(eta3 .ne. 0.0)then
-               if(xn3avg(n) .ne. 0.0)then
+               if(eta3 >= 100.*epsilon(eta1))then
+               if(xn3avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i3(niu, miu, n)= bqlavg_i3(niu, miu, n)/ xn3avg(n)
      &            * vc3_cgs**4 * 100.
                cqlavg_i3(niu, miu, n)= cqlavg_i3(niu, miu, n)/ xn3avg(n)
@@ -9216,8 +9223,8 @@ c                 c_ehst = 1.0
                end if
 
 
-               if(eta4 .ne. 0.0)then
-               if(xn4avg(n) .ne. 0.0)then
+               if(eta4 >= 100.*epsilon(eta1))then
+               if(xn4avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i4(niu, miu, n)= bqlavg_i4(niu, miu, n)/ xn4avg(n)
      &            * vc4_cgs**4 * 100.
                cqlavg_i4(niu, miu, n)= cqlavg_i4(niu, miu, n)/ xn4avg(n)
@@ -9235,8 +9242,8 @@ c                 c_ehst = 1.0
                end if
                end if
 
-               if(eta5 .ne. 0.0)then
-               if(xn5avg(n) .ne. 0.0)then
+               if(eta5 >= 100.*epsilon(eta1))then
+               if(xn5avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i5(niu, miu, n)= bqlavg_i5(niu, miu, n)/ xn5avg(n)
      &            * vc5_cgs**4 * 100.
                cqlavg_i5(niu, miu, n)= cqlavg_i5(niu, miu, n)/ xn5avg(n)
@@ -9254,8 +9261,8 @@ c                 c_ehst = 1.0
                end if
                end if
 
-               if(eta6 .ne. 0.0)then
-               if(xn6avg(n) .ne. 0.0)then
+               if(eta6 >= 100.*epsilon(eta1))then
+               if(xn6avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i6(niu, miu, n)= bqlavg_i6(niu, miu, n)/ xn6avg(n)
      &            * vc6_cgs**4 * 100.
                cqlavg_i6(niu, miu, n)= cqlavg_i6(niu, miu, n)/ xn6avg(n)
@@ -9282,9 +9289,9 @@ c                 c_ehst = 1.0
 *     Interpolate quasilinear coefficients onto the CQL3D grid
 *     --------------------------------------------------------
 
-      if(enorm_factor .ne. 0.0) then
+      if(enorm_factor >= 100.*epsilon(eta1)) then
 
-          if(eta1 .ne. 0.0 .and. ndisti1 .eq. 1)then
+          if(eta1 >= 100.*epsilon(eta1) .and. ndisti1 .eq. 1)then
 
             vperp = uperp * vc1_mks
             vpara = upara * vc1_mks
@@ -9327,7 +9334,7 @@ c                 c_ehst = 1.0
 
 
 
-         if(eta2 .ne. 0.0 .and. ndisti2 .eq. 1) then
+         if(eta2 >= 100.*epsilon(eta1) .and. ndisti2 .eq. 1) then
 
             vperp = uperp * vc2_mks
             vpara = upara * vc2_mks
@@ -9453,7 +9460,7 @@ c                 c_ehst = 1.0
 *        ----------------------------------------------------------------
 *        Write quasilinear diffusion coefficients to file out_cql3d.coef2
 *        ----------------------------------------------------------------
-         if(eta2 .ne. 0.0 .and. ndisti2 .eq. 1)then
+         if(eta2 >= 100.*epsilon(eta1) .and. ndisti2 .eq. 1)then
 
             write (42, 309) nuper
             write (42, 309) nupar
@@ -9488,7 +9495,7 @@ c                 c_ehst = 1.0
 *        ----------------------------------------------------------------
 *        Write quasilinear diffusion coefficients to file out_cql3d.coef3
 *        ----------------------------------------------------------------
-         if(eta3 .ne. 0.0 .and. ndisti3 .eq. 1)then
+         if(eta3 >= 100.*epsilon(eta1) .and. ndisti3 .eq. 1)then
 
             write (43, 309) nuper
             write (43, 309) nupar
@@ -9524,7 +9531,7 @@ c                 c_ehst = 1.0
 *        ----------------------------------------------------------------
 *        Write quasilinear diffusion coefficients to file out_cql3d.coef4
 *        ----------------------------------------------------------------
-         if(eta4 .ne. 0.0 .and. ndisti4 .eq. 1)then
+         if(eta4 >= 100.*epsilon(eta1) .and. ndisti4 .eq. 1)then
 
             write (44, 309) nuper
             write (44, 309) nupar
@@ -10184,7 +10191,7 @@ c            uzeta(i,j) = jhat(i,j) / rhom1(i,j)
 
          f_wdot_edge = 0.0
          f_wdot_core = 0.0
-         if (ptot_wdot .ne. 0.0) then
+         if (ptot_wdot >= 100.*epsilon(eta1)) then
             f_wdot_edge = wdot_edge / ptot_wdot * 100.0
             f_wdot_core = wdot_core / ptot_wdot * 100.0
          end if
@@ -10318,7 +10325,7 @@ c            uzeta(i,j) = jhat(i,j) / rhom1(i,j)
 
 
 c--      Calculate species fractions from Wdot:
-         if (pt .ne. 0.0) then
+         if (pt >= 100.*epsilon(eta1)) then
             pcte =   pe / pt  * 100.
             pcti1 =  pi1 / pt * 100.
             pcti2 =  pi2 / pt * 100.
@@ -10383,7 +10390,7 @@ c        pt_ql  = pe_ql + pi1_ql + pi2_ql + pi3_ql
 c     &                   + pi4_ql +pi5_ql + pi6_ql
 
 
-         if (pt_ql .ne. 0.0) then
+         if (pt_ql >= 100.*epsilon(eta1)) then
             pcte_ql =   pe_ql / pt_ql  * 100.
             pcti1_ql =  pi1_ql / pt_ql * 100.
             pcti2_ql =  pi2_ql / pt_ql * 100.
@@ -11366,17 +11373,7 @@ c        close (15)
 
 
 
-!efd-begin
-c      if (myid.eq.0) then
-c      call profstat()
-c      endif
-!efd-end
-
-
       call blacs_barrier(icontxt, 'All')
-
-
-      close(5)
 
 
       if (myid.eq.0) then
@@ -11464,35 +11461,35 @@ c      endif
          deallocate( eqlavg_i1 )
          deallocate( fqlavg_i1 )
 
-         if(eta2 .ne. 0.0) then
+         if(eta2 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i2 )
             deallocate( cqlavg_i2 )
             deallocate( eqlavg_i2 )
             deallocate( fqlavg_i2 )
          end if
 
-         if(eta3 .ne. 0.0) then
+         if(eta3 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i3 )
             deallocate( cqlavg_i3 )
             deallocate( eqlavg_i3 )
             deallocate( fqlavg_i3 )
          end if
 
-         if(eta4 .ne. 0.0) then
+         if(eta4 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i4 )
             deallocate( cqlavg_i4 )
             deallocate( eqlavg_i4 )
             deallocate( fqlavg_i4 )
          end if
 
-         if(eta5 .ne. 0.0) then
+         if(eta5 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i5 )
             deallocate( cqlavg_i5 )
             deallocate( eqlavg_i5 )
             deallocate( fqlavg_i5 )
          end if
 
-         if(eta6 .ne. 0.0) then
+         if(eta6 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i6 )
             deallocate( cqlavg_i6 )
             deallocate( eqlavg_i6 )
@@ -11584,35 +11581,35 @@ c      endif
          deallocate( eqlavg_i1 )
          deallocate( fqlavg_i1 )
 
-         if(eta2 .ne. 0.0) then
+         if(eta2 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i2 )
             deallocate( cqlavg_i2 )
             deallocate( eqlavg_i2 )
             deallocate( fqlavg_i2 )
          end if
 
-         if(eta3 .ne. 0.0) then
+         if(eta3 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i3 )
             deallocate( cqlavg_i3 )
             deallocate( eqlavg_i3 )
             deallocate( fqlavg_i3 )
          end if
 
-         if(eta4 .ne. 0.0) then
+         if(eta4 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i4 )
             deallocate( cqlavg_i4 )
             deallocate( eqlavg_i4 )
             deallocate( fqlavg_i4 )
          end if
 
-         if(eta5 .ne. 0.0) then
+         if(eta5 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i5 )
             deallocate( cqlavg_i5 )
             deallocate( eqlavg_i5 )
             deallocate( fqlavg_i5 )
          end if
 
-         if(eta6 .ne. 0.0) then
+         if(eta6 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i6 )
             deallocate( cqlavg_i6 )
             deallocate( eqlavg_i6 )
@@ -11766,9 +11763,10 @@ c         deallocate( ntable )
       deallocate (xkprl_a, P_a)
       deallocate (work)
       deallocate (workc)
-!      deallocate (workn)
-!      deallocate (rwork)
-
+!if not static
+      deallocate (workn)
+      deallocate (rwork)
+!fi
       if (myid .eq. 0) then
          close (963)
          close (34)
@@ -11793,7 +11791,7 @@ c         deallocate( ntable )
          close (65)
       endif
 
-      close(6)
+!stderr, cannot close      close(6)
 
 *     -------------------------
 *     stop parallel environment
@@ -11866,7 +11864,7 @@ c
 
       do n = 1, nnoderho
          favg(n) = 0.0
-         if(vol(n) .ne. 0.0)favg(n) = fvol(n) / vol(n)
+         if(vol(n) >= 1.e-10) favg(n) = fvol(n) / vol(n)
       end do
 
       do n = 2, nnoderho - 1
@@ -11924,7 +11922,7 @@ c
       real :: f(nxdim), x(nxdim), ans(nxdim), dvol(nxdim)
 
       ans(nx1) = 0.0
-
+!jcw assumes nx2<nxdim
       do n = nx1, nx2 - 1
 
          ans(n+1) = ans(n) + (f(n) * dvol(n) + f(n+1) * dvol(n+1)) / 2.

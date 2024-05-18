@@ -1,5 +1,5 @@
-c
-c***************************************************************************
+c JCW this file is a bit of a mess with legacy code and possible bounds errors
+c*****************************************************************************
 c
       subroutine field_line_trace(sgn_vprl_in, i, j, 
      .   nmodesx, nmodesy,
@@ -612,9 +612,7 @@ c         call exit
 c
 c***************************************************************************
 c
-
-
-
+!check limits here JCW
       SUBROUTINE EXTINT (NMAX, X, Y, F, H0, MMAX, ERROR)
 C     IMPLICIT REAL*8 (A-H,O-Z), INTEGER (I-N)
       INTEGER NMAX, MMAX
@@ -836,28 +834,30 @@ C     INSTABILITIES, ARISING FROM RESETTING THE MAGNITUDE VECTOR S AT
 C     EVERY EXTRAPOLATION AS DOES THE B - S PROGRAM, IS ELIMINATED BY
 C     RESETTING S ONLY AFTER THE CORRESPONDING DEPENDENT VARIABLE HAS
 C     CONVERGED ACCORDING TO THE CRITERIA CHOSEN.
-C     IMPLICIT REAL*8 (A-H,O-Z), INTEGER (I-N)
+
       INTEGER M
-C     REAL*8 DY(M)
       REAL   DY(M)
       LOGICAL CONV(M), FINISH
       COMMON /ERRCOM/ EPS, S(100), Y(100), NMAX
-C     REAL*8 EPS, S, Y
       REAL   EPS, S, Y
       INTEGER NMAX, NTIMES (100)
-      IF (M.NE.1) GO TO 1
-        DO 3 N = 1, NMAX
-    3     NTIMES(N) = 0
-        NCONV = 0
-    1 DO 2 N = 1, NMAX
-C       IF (.NOT.(DABS(DY(N))/S(N).LT.EPS).OR. CONV(N))  GO TO 2
-        IF (.NOT.( ABS(DY(N))/S(N).LT.EPS).OR. CONV(N))  GO TO 2
+
+
+      IF (M==1) THEN
+         NTIMES(1:NMAX) = 0
+         NCONV = 0
+      END IF
+      
+!      write(*,*) 'orbit err',nmax,m,dy,conv,s(1:nmax),eps
+
+      DO N = 1, NMAX
+        IF (.NOT.( ABS(DY(N))/S(N).LT.EPS).OR. CONV(N))  CYCLE
         NTIMES(N) = NTIMES(N) + 1
         IF (NTIMES(N).EQ. 1) NCONV = NCONV + 1
         IF (NTIMES(N).EQ. 2) CONV(N) = .TRUE.
 C       IF (DABS(Y(N)).GT. S(N)) S(N) = DABS(Y(N))
         IF ( ABS(Y(N)).GT. S(N)) S(N) =  ABS(Y(N))
-    2 CONTINUE
+      END DO
       IF (NCONV.EQ.NMAX) FINISH = .TRUE.
       RETURN
       END
@@ -865,5 +865,3 @@ C       IF (DABS(Y(N)).GT. S(N)) S(N) = DABS(Y(N))
 c
 c***************************************************************************
 c
-
-
