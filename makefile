@@ -12,10 +12,11 @@ OBJ_DIR = obj
 INCLUDE_DIRS = 
 LIBS = 
 F90FLAGS = 
-WARNING_FLAGS =  -check all
+WARNING_FLAGS = 
 
 # per file build warning flags
-ORBIT_F_WARNING_FLAGS =
+ORBIT_F_WARNING_FLAGS = 
+# $(OBJ_DIR)/bessel.o \
 
 OBJ_FILES = \
  $(OBJ_DIR)/cauchy_mod.o \
@@ -46,7 +47,6 @@ OBJ_FILES = \
  $(OBJ_DIR)/fourier.o \
  $(OBJ_DIR)/assert.o \
  $(OBJ_DIR)/setupblacs.o \
- $(OBJ_DIR)/bessel.o \
  $(OBJ_DIR)/check.o \
  $(OBJ_DIR)/rf2x_setup2.o \
  $(OBJ_DIR)/profile_setup.o \
@@ -224,7 +224,7 @@ $(OBJ_DIR)/eqdsk_setup.o:    $(SRC_DIR)/eqdsk_setup.f
 
 $(OBJ_DIR)/orbit.o:          $(SRC_DIR)/orbit.f
 	                     $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/orbit.o \
-                             $(SRC_DIR)/orbit.f  ${ORBIT_F_WARNING_FLAGS}$(INCLUDE_DIRS)
+                             $(SRC_DIR)/orbit.f  ${ORBIT_F_WARNING_FLAGS} $(INCLUDE_DIRS)
 
 $(OBJ_DIR)/eqdsk_plot.o:     $(SRC_DIR)/eqdsk_plot.f90
 	                     $(COMPILE_r4) -o $(OBJ_DIR)/eqdsk_plot.o \

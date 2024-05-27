@@ -1748,14 +1748,6 @@ c         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          sig0 = 0.0
          sig1 = 0.0
@@ -2371,14 +2363,6 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
 
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          sig0 = 0.0
          sig1 = 0.0
@@ -2977,14 +2961,6 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
 
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          sig0 = 0.0
          sig1 = 0.0
@@ -3795,7 +3771,7 @@ c
      &   expbesovergam(0: lmaxdim),
      &   xil(0: lmaxdim), xilp(0: lmaxdim), exgam
 
-      complex b(100)
+      complex b(100) !jcw magic number
 
       exgam = exp(-gamma)
       gammod = cabs(gamma)
@@ -3803,7 +3779,7 @@ c
  !     if(gammod .le. 700.)then
          nmax = lmax + 1
  !        call besic(gamma, nmax, b, ier)
-         call cbesi(gamma, 0.0, 2, nmax, b,nz, ier)
+         call cbesi(gamma, 0.0, 2, nmax+1, b,nz, ier)
         if(ier .ne. 0)write(6,100) ier
 
          do l = 0, lmax
@@ -3818,11 +3794,6 @@ c
          end do
 !      end if
 
-!      if(gammod .gt. 700.)then
-!         do l = 0, lmax
-!            call bes_asym(gamma, l, expbes(l), expbesp(l))
-!         end do
-!      end if
 
       do l = 0, lmax
          expbesovergam(l) = expbes(l) / gamma
@@ -3832,95 +3803,6 @@ c
       return
       end
 
-
-c
-c***************************************************************************
-c
-
-
-      subroutine bes_expand(gamma, lmax, expbes, expbesp, lmaxdim,
-     .   expbesovergam)
-
-*-------------------------------------------------------------------
-*     Calculates exp(-gamma) times the modified bessel functions
-*     (and derivatives) of order up to lmax using second order
-*     expansion for small argument
-*-------------------------------------------------------------------
-
-      implicit none
-
-      integer lmax, nmax, ier, l, lmaxdim
-      real factrl, factl, infinity_check
-      complex gamma, expbes(0:lmaxdim), expbesp(0:lmaxdim),
-     .   expbesovergam(0:lmaxdim), xilovergam,
-     .   xil(0:lmaxdim), xilp(0:lmaxdim), exgam
-
-      complex b(100)
-
-      exgam = 1.0 - gamma + gamma**2 / 2.0
-
-      do l = 0, lmax
-         factl = factrl(l)
-
-         infinity_check = 1/(2**l * factl)
-         if ( infinity_check .gt. 1e30 ) then
-
-          xil(l) = 0;
-          xilp(l) = 0;
-          xilovergam = 0;
-
-         else
-
-         xil(l) = gamma**l / (2**l * factl) *
-     .                                 ( 1. + gamma**2 / (4. * (l+1)))
-         xilp(l) = gamma**(l-1) / (2**l * factl) *
-     .                     (l + (l+2) * gamma**2 / (4. * (l+1)))
-
-         xilovergam = gamma**(l-1) / (2**l * factl) *
-     .                                 ( 1. + gamma**2 / (4. * (l+1)))
-
-         endif 
-
-         expbes(l) = exgam * xil(l)
-         expbesp(l) = exgam * xilp(l)
-         expbesovergam(l) = exgam * xilovergam
-
-c         write(6, 100)l, expbes(l), expbesp(l)
-      end do
-
-  100 format(i10, 1p8e12.4)
-
-      return
-      end
-
-
-c
-c***************************************************************************
-c
-
-      subroutine bes_asym(z, n, exil, exilp)
-
-      implicit none
-
-      integer mu, n
-      real pi
-      complex z, exil, exilp
-      data pi/3.141592654/
-
-      mu = 4 * n**2
-      exil =  1.0 / csqrt(2.0 * pi * z)
-     1   * (1.0
-     1   - (mu - 1)/(8.0 * z)
-     1   + (mu - 1) * (mu - 9) / (2.0 * (8.0 * z)**2)
-     1   - (mu - 1) * (mu - 9) * (mu - 25) / (6.0 * (8.0 * z)**3)  )
-      exilp = 1.0 / csqrt(2.0 * pi * z)
-     1   * (1.0
-     1   - (mu + 3)/(8.0 * z)
-     1   + (mu - 1) * (mu + 15) / (2.0 * (8.0 * z)**2)
-     1   - (mu - 1) * (mu - 9) * (mu + 35) / (6.0 * (8.0 * z)**3)  )
-
-      return
-      end
 
 c
 c***************************************************************************

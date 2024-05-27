@@ -29,6 +29,7 @@
        & zetai_table, dKdL_table, nmax, mmax,   &
        & bhatgradbx, bhatgradby, bhatgradbz, z2_electron, xnuomg)
 
+    use Complex_Bessel, only: cbesj
     implicit none
 
     integer i_global, j_global, ier, nxdim, nydim, k, lmaxdim, ndist
@@ -116,7 +117,7 @@
     complex xx(nkdim1 : nkdim2, 1 : nxdim),   &
     &       yy(mkdim1 : mkdim2, 1 : nydim)
      
-    integer ntable, mtable, nmax, mmax
+    integer ntable, mtable, nmax, mmax, nz
       
     complex z0_table(ntable, mtable)
     complex z1_table(ntable, mtable)
@@ -341,7 +342,8 @@
 
              zeta = xkperpn * uper(k_uper) * c * sqmut0i / wc
 
-             call besjc(zeta, nharm + 2, b, ier)
+             call cbesj(zeta, 0.0, 1, nharm+3, b, nz ,ier)
+!             call besjc(zeta, nharm + 2, b, ier)
              if(ier .ne. 0) write(6, *) "ier = ", ier
 
              do IHARM = 0, NHARM + 1
@@ -394,8 +396,9 @@
        do i = 1, nzeta + 1
           zetai(i) = zetamin + (i - 1) * dzeta
           zeta = cmplx(zetai(i), 0.0)
-          
-          call besjc(zeta, nharm + 2, b, ier)
+
+          call cbesj(zeta, 0.0, 1, nharm+3, b, nz ,ier)
+!          call besjc(zeta, nharm + 2, b, ier)
 !          if(ier .ne. 0) write(6, *) "ier = ", ier
           
           do iharm = 0, NHARM + 1

@@ -309,7 +309,7 @@ c      CHARACTER(128) :: root
       character(1):: trans
 
       integer :: info
-      complex b, zi, cexpkxky
+      complex b, cexpkxky
       complex alpha
 
       real :: norm2, norm2_max, alphae, alpha1
@@ -414,8 +414,8 @@ c     &        yy_inv(mkdim1 : mkdim2, 1 : nymx)
       real :: xkthrho, wphase, vsound, domgk, xkthdx, omgestar, rhoi10,
      &   v0i, vthi10, vthe, vthi, vphase, rhoi1overl, rnz, eta2,
      &   xk0, shearedge, eta1, xn1, xmi1, xmh, xme, qi1, xmi2,
-     &   xmi3, t0i, t0i2, t0i3, t0e, teedge, clight, xmu0, xlnlam,
-     &   omgci10, omgrf, xmax, qi2, pi, twopi, eps0, qi3,
+     &   xmi3, t0i, t0i2, t0i3, t0e, teedge, xlnlam,
+     &   omgci10, omgrf, xmax, qi2, qi3,
      &   costh, sinth, radius, rnx,  rny, rnphi
       real :: ymaxp, yminp, xminp, xmaxp
       real :: rhoi20, vthi20, omgci20
@@ -913,14 +913,6 @@ c       complex, dimension(:,:), allocatable :: Btmp
       integer :: indxg2p,indxg2l,indxl2g
       external indxg2p,indxg2l,indxl2g
 
-! DLG - check to make sure the problem size you are running is <= the
-! compile time parameters, i.e.,
-
-      if (nmodesx .gt. nmodesmax .or. nmodesy .gt. mmodesmax) then
-        stop 'ERROR - nmodesx and nmodesy must be <= nmodesmax and '//
-     &        'mmodesmax respectively (see src/size_mode.f90)'
-      end if
-
 *     ---------------
 *     allocate arrays
 *     ---------------
@@ -1145,6 +1137,15 @@ c       complex, dimension(:,:), allocatable :: Btmp
 *     ------------------------
       read (63, aorsa2din)
 
+! DLG - check to make sure the problem size you are running is <= the
+! compile time parameters, i.e.,
+
+      if (nmodesx .gt. nmodesmax .or. nmodesy .gt. mmodesmax) then
+        stop 'ERROR - nmodesx and nmodesy must be <= nmodesmax and '//
+     &        'mmodesmax respectively (see src/size_mode.f90)'
+      end if
+
+      
       rt_init = rt
       b0_init = b0
 
@@ -1177,11 +1178,11 @@ c       complex, dimension(:,:), allocatable :: Btmp
 *     ---------------------------------------------------------
       if(nphi_number .gt. 1) prfin=0.0
 
-c      idiag = nmodesx / 2
-c      jdiag = nmodesy / 2
+      idiag = nmodesx / 2
+      jdiag = nmodesy / 2
 
-      idiag = 104
-      jdiag = 90
+!      idiag = 104
+!      jdiag = 90
 
       nbessj = lmax + 2
 
@@ -1402,7 +1403,6 @@ c      jequat  = nnodey / 2
 
       rholim = sqrt(psilim)
 
-      q = 1.6e-19
       if(te0 .eq. 0.0)te0 = ti0
 
       t0e = te0
@@ -10572,7 +10572,7 @@ c         end do
 
 
          do n = nkx1, nkx2
-            write(6, *) "n = ", n, "xkb(64, n) = ", xkb(64, n)
+            write(6, *) "n = ",n, "xkb(nxmx/2, n) = ", xkb(nxmx/2, n)
          end do
 
          write(38, 309) nnoderho
@@ -11937,3 +11937,31 @@ c
 c
 c***************************************************************************
 c
+
+      function factrl(n)
+      integer:: n
+      real:: factrl
+
+      integer:: j, ntop
+      integer, parameter:: maxsave=100
+      real:: a(maxsave)
+      save:: ntop, a
+      data ntop, a(1)/0, 1./
+      
+      if(n < 0) then
+         write(*,*) 'negative factorial in factrl'
+      else if (n <= ntop)then
+         factrl = a(n+1)
+      else if (n <= maxsave-1) then
+         do j = ntop+1, n
+            a(j+1) = j * a(j)
+         end do
+         ntop = n
+         factrl = a(n+1)
+      else
+         factrl = gamma(n+1.)
+      end if
+
+      return
+      end
+      

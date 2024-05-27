@@ -855,9 +855,9 @@ C     CONVERGED ACCORDING TO THE CRITERIA CHOSEN.
         NTIMES(N) = NTIMES(N) + 1
         IF (NTIMES(N).EQ. 1) NCONV = NCONV + 1
         IF (NTIMES(N).EQ. 2) CONV(N) = .TRUE.
-C       IF (DABS(Y(N)).GT. S(N)) S(N) = DABS(Y(N))
         IF ( ABS(Y(N)).GT. S(N)) S(N) =  ABS(Y(N))
       END DO
+      
       IF (NCONV.EQ.NMAX) FINISH = .TRUE.
       RETURN
       END

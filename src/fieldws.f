@@ -777,7 +777,7 @@ c      write(6, *)"ebk(32,32)     = ", ezk(32,32)
 
 
       do n = 1, nkxplt
-         write(6, *) "n = ", n, "capd(64, n) = ", capd(64, n)
+         write(6, *) "n = ", n, "capd(nxmx/2, n) = ", capd(nxmx/2, n)
       end do
 
       read(38, 309) nnoderho

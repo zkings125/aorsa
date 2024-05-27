@@ -27,13 +27,13 @@
 
       integer nxmx, nymx, idiag, jdiag, ieq, n_prof_flux
       integer ndfmax,
-     1    ninteg, nd, izoom1, izoom2, jzoom1, jzoom2, ndf, nmaxe, irnc
+     &    ninteg, nd, izoom1, izoom2, jzoom1, jzoom2, ndf, nmaxe, irnc
       integer nrow, ncol, norder, iprofile
 
       integer mkdim1, mkdim2
 
       integer nkdim1, nkdim2, nkx1, nkx2, nldim, nldim3,
-     1   nky1, nky2, iant
+     &   nky1, nky2, iant
 
       real eslow, eslowev, qi_slo, eta_slo, z_slo, xmi_slo, amu_slo,
      &    xn_slo
@@ -270,7 +270,7 @@ c      parameter (mmodesmax = 450)
 *     set default values of input data:
 *     ---------------------------------
       if (myid.eq.0) then
-         write(*,*) 'entering rf2x',allocated(rho_fine),size(rho_fine)
+         write(*,*) 'entering rf2x',allocated(rho_fine)
       end if 
       nnoderho = nnodex/2 !50  !JCW bad magic number
 
