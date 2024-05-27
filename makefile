@@ -15,8 +15,7 @@ F90FLAGS =
 WARNING_FLAGS = 
 
 # per file build warning flags
-ORBIT_F_WARNING_FLAGS = 
-# $(OBJ_DIR)/bessel.o \
+ORBIT_F_WARNING_FLAGS = -ffpe-trap=invalid
 
 OBJ_FILES = \
  $(OBJ_DIR)/cauchy_mod.o \
@@ -146,6 +145,11 @@ ifeq ($(LSB_IS),Ubuntu)
     $(info System identified as Ubuntu20.04)
     SYSTEM_IDENTIFIED = 1
   endif
+  ifeq ($(LSB_RS),24.04)
+    include makeopts.ubuntu24.04
+    $(info System identified as Ubuntu20.04)
+    SYSTEM_IDENTIFIED = 1
+  endif
 endif
 ifeq ($(SLURM_CLUSTER_NAME),eofe7) #building on node
   ifdef MKLROOT
@@ -167,11 +171,11 @@ ifeq ($(SYSTEM_IDENTIFIED),0)
 endif
 
 
-F90          = $(FC) -c $(COMMON_OPTION) #$(INCLUDE_DIRS)
-F90_NOSAVE   = $(FC) -c $(COMMON_OPTION2) # $(INCLUDE_DIRS)
-F90_r4       = $(FC) -c $(COMMON_OPTION3) #$(INCLUDE_DIRS)
-F90_4        = $(FC) -c $(COMMON_OPTION4) #$(INCLUDE_DIRS)
-F90_LOAD     = $(FC)    $(COMMON_OPTION) #$(INCLUDE_DIRS)
+F90          = -cpp $(FC) -c $(COMMON_OPTION) 
+F90_NOSAVE   = -cpp $(FC) -c $(COMMON_OPTION2)
+F90_r4       = -cpp $(FC) -c $(COMMON_OPTION3)
+F90_4        = -cpp $(FC) -c $(COMMON_OPTION4)
+F90_LOAD     = -cpp $(FC)    $(COMMON_OPTION) 
 
 INLINE=
 OPTIMIZATION =  
@@ -205,9 +209,6 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F
 	${COMPILE90} -c $< -o $@ ${INCLUDE_DIRS} ${WARNING_FLAGS}
-
-#${OBJ_DIR}/orbit.o: ${SRC_DIR}/orbit.f
-#	${COMPILE90} -c $< -o $@ ${INCLUDE_DIRS} ${ORBIT_F_WARNING_FLAGS}
 
 
 $(OBJ_DIR)/rf2x_setup2.o:    $(SRC_DIR)/rf2x_setup2.f 
