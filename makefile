@@ -171,11 +171,11 @@ ifeq ($(SYSTEM_IDENTIFIED),0)
 endif
 
 
-F90          = -cpp $(FC) -c $(COMMON_OPTION) 
-F90_NOSAVE   = -cpp $(FC) -c $(COMMON_OPTION2)
-F90_r4       = -cpp $(FC) -c $(COMMON_OPTION3)
-F90_4        = -cpp $(FC) -c $(COMMON_OPTION4)
-F90_LOAD     = -cpp $(FC)    $(COMMON_OPTION) 
+F90          = $(FC) -cpp -c $(COMMON_OPTION) 
+F90_NOSAVE   = $(FC) -cpp -c $(COMMON_OPTION2)
+F90_r4       = $(FC) -cpp -c $(COMMON_OPTION3)
+F90_4        = $(FC) -cpp -c $(COMMON_OPTION4)
+F90_LOAD     = $(FC)    $(COMMON_OPTION) 
 
 INLINE=
 OPTIMIZATION =  
