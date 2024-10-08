@@ -2031,19 +2031,18 @@ c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
 
 *     -----------------------------
 *     deposit dldb on 2D flux grid:
-*     -----------------------------         
-      write(*,*) 'flux_to_rz, profile_in:',profile_in
+*     -----------------------------
       call flux_to_rz(nnodex, nnodey, profile_in, 
      &   profile_out, rho_in, nrho, rho_ij) 
-          
+      write(*,*) 'check pt 1'
       dldb_tot12(1:nnodex, 1:nnodey) = profile_out 
                       
       call polavg(dldb_tot12, dldbavg, rho, nxmx, nymx, nrhomax,
      &   nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
-     
+      write(*,*) 'check pt 2'
       call volume_xy(rho, nxmx, nymx, nrhomax,
      &   nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol_xy)
-     
+      write(*,*) 'check pt 3'     
 
      
 9318  format(a128)

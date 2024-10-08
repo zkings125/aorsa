@@ -269,9 +269,7 @@ c      parameter (mmodesmax = 450)
 *     ---------------------------------
 *     set default values of input data:
 *     ---------------------------------
-      if (myid.eq.0) then
-         write(*,*) 'entering rf2x',allocated(rho_fine)
-      end if 
+      nnodex = nmodesx  !assignment to nnodex      
       nnoderho = nnodex/2 !50  !JCW bad magic number
 
       n_prof_flux = 1
@@ -427,8 +425,6 @@ c      parameter (mmodesmax = 450)
 
       nkx2 = nmodesx / 2
       nkx1 = - nmodesx / 2 + 1
-      nnodex = nmodesx
-
 
 
       nky2 = nmodesy / 2
@@ -623,6 +619,7 @@ c      rhomax = 1.0
       allocate(rho_fine(nnodex_fine, nnodey_fine) )
       if (myid.eq.0) then
          write(*,*) 'entering2 rf2x',allocated(rho_fine)
+         write(*,*) 'entering rf2x',allocated(rho_fine),nnodex
       end if
 
 *     -----------------------------
