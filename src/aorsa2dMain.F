@@ -101,12 +101,12 @@ c      CHARACTER(128) :: root
      &  i_seg, j_seg, iseg1, iseg2, jseg1, jseg2, i0, j0
 
       integer :: nxmx,nymx,ieq, nlmx, nkldim1, nkldim2, nkl, nkl1, nkl2
-      integer nmax, mmax
+      integer :: nmax, mmax
       real :: zeta_max, zeta_min, dzeta, dKdL, dkprldl, d2kprldl2
       real :: a0, a1, b1, psil, c0, xkprl_phi, xkprl_perp, psil0
       real :: rt_init, b0_init
 
-      complex z0n, z1n, z2n
+      complex :: z0n, z1n, z2n
       integer :: incX, global_row, global_col
       integer :: ndfmax, lwork, lrwork,
      &    ninteg, nd, izoom1, izoom2, jzoom1, jzoom2, ndf, nmaxe, irnc

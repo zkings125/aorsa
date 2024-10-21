@@ -362,18 +362,18 @@
       integer :: nkzm = 1                 !-----nkzm not used
       integer :: idens = 0                !-----idens not used
       integer :: ibackground = 1          !-----ibackground is not used
-      integer :: idiag = 5
-      integer :: jdiag = 4
+      integer :: idiag = 5                !-----idiag not used
+      integer :: jdiag = 4                !-----jdiag not used
+      
       integer :: ndiste = 0               !-----ndist:  if (ndist .eq. 0) Maxwellian is used in sigmad_stix
-                                          !-----        if (ndist .eq. 1) non-Maxwellian is used in sigmad_stix
-      integer :: ndisti1 = 0
+      integer :: ndisti1 = 0              !-----        if (ndist .eq. 1) non-Maxwellian is used in sigmad_stix
       integer :: ndisti2 = 0
       integer :: ndisti3 = 0
       integer :: ndisti4 = 0
       integer :: ndisti5 = 0
       integer :: ndisti6 = 0      
 
-      integer :: nphimx, nphasemx 
+      integer :: nphimx
       integer :: nmodesx = 128            !-----nmodesx=number of modes used in the x direction
       integer :: nmodesy = 128            !-----nmodesy=number of modes used in the y direction
       integer :: nmodeslb = 256           !-----nmodeslb =number of modes used along the field line
@@ -382,13 +382,13 @@
 
       integer :: nphi_number = 10         !-----number of nphi's in the nphi_array 
            
-      parameter (nphimx = 200)            !-----dimension of nphi_array 
+      integer, parameter :: nphimx = 200  !-----dimension of nphi_array 
       integer :: nphi_array(nphimx) = 0   !-----list of nphi's in the nphi_array
       
-      parameter (nphasemx = 12) 
+      integer, parameter :: nphasemx = 12
       real :: phase_array(nphasemx) = 0.0   !-----list of phase on each antenna strap     
       
-      real phase, zmin, zmax, phi0, amplt(20) 
+      real :: phase, zmin, zmax, phi0, amplt(20) 
                    
       namelist/aorsa2din/nmodesx, nmodesy, nmodeslb, nwdot, lmax, lmaxe, ibessel, &
      &    ti0, xnuead, xnu1ad, xnu2ad, rant, te0, yant,  &

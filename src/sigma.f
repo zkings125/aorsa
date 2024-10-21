@@ -3380,6 +3380,7 @@ c
       rhoij = rho(igiven, jgiven)
 
       fmid =  0.0
+      write(*,*) 'rhoij',rhoij,igiven,jgiven
       if (rhoij .gt. 1.0) return
 
 c      jmid  = nnodey / 2
@@ -3404,6 +3405,7 @@ c     DLG: for the z slice on the magnetic axis (jmid)
          if(rhoij .lt. rho(istart,jmid)) i0 = istart
          if(rhoij .ge. rho(nnodex,jmid)) then
             write(*,*) 'WARNING (sigma.f) : rhoij > rho(nnodex,jmid)'
+            write(*,*) rhoij, rho(nnodex,jmid)
             i0 = nnodex-1
          endif
 
