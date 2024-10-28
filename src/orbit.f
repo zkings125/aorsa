@@ -501,9 +501,13 @@ c     .   nxmx, nymx, dr, dz)
       x_extint = xprime + xwleft
       capr = x_extint + rt
 
-      dxdphi = sgn_vprl * capr * br / bphi
-      dydphi = sgn_vprl * capr * bz / bphi
-
+      if (bphi/modb <= 1.0e-2) then !find dX/dell if bphi<0.01 modb
+         dxdphi = sgn_vprl * br / modb
+         dydphi = sgn_vprl * bz / modb
+      else 
+         dxdphi = sgn_vprl * capr * br / bphi
+         dydphi = sgn_vprl * capr * bz / bphi
+      end if
 
       dy(1) = dxdphi
       dy(2) = dydphi
@@ -690,7 +694,7 @@ C
 C     REAL*8 STEPFC, X0, U, SUM, YM, BETA, H, DEN, SQRT2, YP
       REAL   STEPFC, X0, U, SUM, YM, BETA, H, DEN, SQRT2, YP
       INTEGER J, K, L, M, N, LMAX, KASIDE, PTS, MM, MMAXP
-      INTEGER KMIN
+      INTEGER KMIN, icount
 C     REAL*8 HM(11), S(11), P(11), YBAR(100,11), Y0(100)
       REAL   HM(11), S(11), P(11), YBAR(100,11), Y0(100)
 C     REAL*8 YNEW(100), YOLD(100), DY(100), DY0(100), YHOLD(7,10,100)
@@ -698,6 +702,7 @@ C     REAL*8 YNEW(100), YOLD(100), DY(100), DY0(100), YHOLD(7,10,100)
 C
 C
 C INITIALIZE..100
+      icount = 0
       MMAXP = MMAX + 1
       SQRT2 =  SQRT(2.0)
       FINISH = .FALSE.
@@ -710,6 +715,8 @@ C INITIALIZE..100
 C
 C START A NEW LEVEL..200
   204 X = X0 + H0
+      icount = icount + 1
+      !write(*,*) 'extint icount',icount
       KMIN = 1
       STEPFC = 2.0**(MMAX/3.0+0.5)
       DO 205 N = 1, NMAX
@@ -726,7 +733,7 @@ C     ELSE BEGIN SHIFTING OLD INFORMATION INTO POSITION..
   202       YHOLD(L,M,N) = YHOLD (L+1, M+2, N)
 C
 C COMPUTING BETA AND ASSOCIATED QUANTITIES..300
-  203 H = H0/2
+  203 H = H0/2.0
       HM(1) = H0/2.0
       HM(2) = H0/4.0
       HM(3) = H0/6.0
@@ -742,7 +749,7 @@ C     BEGINNING THE LOOP OVER MMAX EXTRAPOLATIONS IN THIS LEVEL..
         KASIDE = 2
         IF (2*(M/2).EQ.M) KASIDE = 3
         L = (M + 1)/2 + 1
-        IF (M.GT.2) HM(MM) = HM(MM-2)/2
+        IF (M.GT.2) HM(MM) = HM(MM-2)/2.
         H = HM(MM)
 C       S(MM) = 1 - DEXP(-BETA*H*H)
         S(MM) = 1 -  EXP(-BETA*H*H)
@@ -773,7 +780,7 @@ C
 C NOW ADVANCE THE DEPENDENT VARIABLES..500
   503   IF (M.GT.0) GO TO 504
         DO 505 N = 1, NMAX
-          YBAR(N,1) = (YNEW(N) + YOLD(N) + H*DY(N))/2
+          YBAR(N,1) = (YNEW(N) + YOLD(N) + H*DY(N))/2.
   505     Y(N) = YBAR(N,1)
         IF (MMAX.EQ.0) GO TO 700
         GO TO 400
@@ -807,7 +814,7 @@ C       END DETERMINATION OF THE INTERPOLATIONAL POLYNOMIALS
 C
 C PREPARE FOR THE NEXT LEVEL IF NECESSARY..600
       LATERL = .TRUE.
-      H0 = H0/2
+      H0 = H0/2.0
       GO TO 204
 C
 C RETURN..700
