@@ -373,7 +373,6 @@
       integer :: ndisti5 = 0
       integer :: ndisti6 = 0      
 
-      integer :: nphimx
       integer :: nmodesx = 128            !-----nmodesx=number of modes used in the x direction
       integer :: nmodesy = 128            !-----nmodesy=number of modes used in the y direction
       integer :: nmodeslb = 256           !-----nmodeslb =number of modes used along the field line
