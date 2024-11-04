@@ -151,7 +151,9 @@ ifeq ($(LSB_IS),Ubuntu)
     SYSTEM_IDENTIFIED = 1
   endif
 endif
-ifeq ($(SLURM_CLUSTER_NAME),eofe7) #building on node
+
+ifeq ($(SLURM_CLUSTER_NAME),eofe7) #building on node of engaging cluster
+ifeq ($(LSB_IS),CentOS) #building on node of engaging cluster
   ifdef MKLROOT
   include makeopts.eofe7.intel
   $(info "Intel found" )
@@ -161,6 +163,15 @@ ifeq ($(SLURM_CLUSTER_NAME),eofe7) #building on node
   endif
   SYSTEM_IDENTIFIED = 1
 endif
+ifeq ($(LSB_IS),Rocky) #building on node of engaging cluster
+  ifdef MKLROOT
+  include makeopts.engaging.oneapi
+  $(info "Intel on rocky found" )
+  SYSTEM_IDENTIFIED = 1
+endif
+endif
+endif
+
 ifeq ($(HOSTNAME),eofe7.mit.edu)  #building on host
   include makeopts.eofe7
   SYSTEM_IDENTIFIED = 1
@@ -245,7 +256,7 @@ $(OBJ_DIR)/dql_write.o:      $(SRC_DIR)/dql_write.f
 
 $(OBJ_DIR)/plot.o:           $(SRC_DIR)/plot.f
 	                     $(COMPILE_r4) -o $(OBJ_DIR)/plot.o \
-                             $(SRC_DIR)/plot.f $(INCLUDE_DIRS)				     
+                             $(SRC_DIR)/plot.f $(INCLUDE_DIRS)
 
 ### FFTPACK files:
 
