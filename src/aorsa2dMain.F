@@ -9683,8 +9683,14 @@ c           if(nnode_local .le. 0)xjprl(i,j) = redotj_ehst(i,j)
       call sgrator(x, y, redotjt, 1, nnodex, 1, nnodey, pedotjt,
      &   capr, rt, nxmx, nymx)
 
-      call sgrator1(x, y, xjy, 1, nnodex, 1, nnodey, i_ant,
-     &   capr, rt, nxmx, nymx, j_cur_max)
+      !may be better to just pass sqrt(xjx**2+xjy**2+xjz**2)
+      if (curdnz > 1.e-3) then
+         call sgrator1(x, y, xjz, 1, nnodex, 1, nnodey, i_ant,
+     &      capr, rt, nxmx, nymx, j_cur_max)
+      else
+         call sgrator1(x, y, xjy, 1, nnodex, 1, nnodey, i_ant,
+     &      capr, rt, nxmx, nymx, j_cur_max)
+      end if
 
       call sgrator(x, y, xjprl, 1, nnodex, 1, nnodey, xjtot,
      &   capr, rt,  nxmx, nymx)
