@@ -1,8 +1,7 @@
       module size_mod
       implicit none
 
-      integer, parameter:: nmodesmax=32, mmodesmax=32
-!JCW AORSA presently not happy if sizes are not 2x nmodex,
+      integer, parameter:: nmodesmax=64, mmodesmax=64
 !     ---------------------------------------------------
 !     Maximum number of modes allowed:
 !     IMPORTANT NOTE: when changing these parameters, you 

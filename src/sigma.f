@@ -266,14 +266,6 @@ c      if(ndist .eq. 0)then
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          dkwxx = 0.0
          dkwxy = 0.0
@@ -866,14 +858,6 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          delta_x = 0.0 
          delta_y = 0.0 
@@ -1162,14 +1146,6 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          sig0 = 0.0
          sig1 = 0.0
