@@ -1,6 +1,8 @@
+
+
 include compileropts.intel
 #-ftrapuv #there are a LOT of unitialized vars in aorsa
-FC = mpiifx -cpp -g -O0 -traceback -debug all -qmkl=cluster -module mod
+FC = mpiifx -cpp  -qmkl=cluster -module mod -g -O0 -traceback -debug all
 #with spack env loaded, this is all in path
 #PGPLOT_DIR=$(GIZA_ROOT)/lib
 

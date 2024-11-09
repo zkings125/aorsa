@@ -2007,7 +2007,7 @@ c             tau_bounce(i, j, n_theta) = dtau_tot12
            dldb_tot12(i,j) = dldb_tot1 + dldb_tot2
            
 c          write(6, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
-c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
+          write(*, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j),i,j
            
            i_sav = i
            j_sav = j
