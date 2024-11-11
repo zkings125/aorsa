@@ -1186,7 +1186,7 @@ c
      &   capr, rmin_zoom, rmax_zoom, xnmin, xnmax)
 
       title= 'Edge density in midplane'
-      titll= 'density (m-3)'
+      titll= 'density (m^{-3})'
       titlr= ''
       titlb = 'R (m)'
 
@@ -1249,27 +1249,27 @@ c     &    nnodex, nxmx, xnmin, xnmax, rmin_zoom, rmax_zoom)
 
 
       title= 'Flux average beam density'
-      titll= 'density (m-3)'
+      titll= 'density (m^{-3})'
       titlr='       '
       call ezplot1(title, titll, titlr, rhon_half, xn3avg,
      &   nnoderho_half, nrhomax)
 
 
       title= 'Flux average beam temperature'
-      titll= 'kTi_fast (eV)'
+      titll= 'kTi_{fast} (eV)'
       titlr='       '
       call ezplot1(title, titll, titlr, rhon_half, xkti3avg,
      &    nnoderho_half, nrhomax)
 
 
       title= 'Flux average minority density'
-      titll= 'density (m-3)'
+      titll= 'density (m^{-3})'
       titlr='       '
       call ezplot1(title, titll, titlr, rhon_half, xn2avg,
      &   nnoderho_half, nrhomax)
 
       title= 'Flux average majority density'
-      titll= 'density (m-3)'
+      titll= 'density (m^{-3})'
       titlr='       '
       call ezplot1(title, titll, titlr, rhon_half, xn1avg,
      &   nnoderho_half, nrhomax)
@@ -4708,8 +4708,8 @@ c
       end do
 
       title = 'ntilda_e'
-      titll = 'Re ntilda_e (m-3)'
-      titlr = 'Im ntilda_e (m-3)'
+      titll = 'Re ntilda_e (m^{-3})'
+      titlr = 'Im ntilda_e (m^{-3})'
       titlb = 'R (m)'
 
       call ezplot2q(title, titll, titlr, titlb, capr, fmidre, fmidim,
@@ -8250,7 +8250,7 @@ c--Advance graphics frame and get ready to plot
 
 !      CALL PGSVP (0.15,0.85,0.85,0.95)'
       call palett(2, 1., 0.5)
-      CALL PGWEDG('RI', 1.0, 3.0, FMIN, FMAX, 'Values')
+      CALL PGWEDG('RI', 1.0, 2.5, FMIN, FMAX, 'Values')
 
       call pgsci(nblack)
       call pglab(titx, tity, title)

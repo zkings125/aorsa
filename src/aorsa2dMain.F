@@ -11970,12 +11970,12 @@ c
       real:: a(maxsave)
       save:: ntop, a
       data ntop, a(1)/0, 1./
-      
-      if(n < 0) then
-         write(*,*) 'negative factorial in factrl'
-      else if (n <= ntop)then
+
+      if (n < 0)stop 'factrl is called with negative integer'
+
+      if(n <= ntop) then
          factrl = a(n+1)
-      else if (n <= maxsave-1) then
+      else if(n <= maxsave-1) then
          do j = ntop+1, n
             a(j+1) = j * a(j)
          end do
