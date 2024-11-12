@@ -3356,7 +3356,6 @@ c
       rhoij = rho(igiven, jgiven)
 
       fmid =  0.0
-      write(*,*) 'rhoij',rhoij,igiven,jgiven
       if (rhoij .gt. 1.0) return
 
 c      jmid  = nnodey / 2
