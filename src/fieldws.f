@@ -1038,32 +1038,32 @@ c
       title = 'Real z0 table1'
       call ezconc(zetai_table, dKdL_table, real(z0_table1),
      &     ff, nmax, mmax, numb, ntable, mtable, nlevmax,
-     &     title, titx, tity, iflag,1.0)
+     &     title, titx, tity, iflag,0.25)
 
       title = 'Imag z0 table1'
       call ezconc(zetai_table, dKdL_table, aimag(z0_table1),
      &    ff, nmax, mmax,
-     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,1.0)
+     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,0.25)
 
       title = 'Real z1 table1'
       call ezconc(zetai_table, dKdL_table, real(z1_table1),
      &   ff, nmax, mmax,
-     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,1.0)
+     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,0.25)
 
       title = 'Imag z1 table1'
       call ezconc(zetai_table, dKdL_table, aimag(z1_table1),
      &    ff, nmax, mmax,
-     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,1.0)
+     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,0.25)
 
       title = 'Real z2 table1'
       call ezconc(zetai_table, dKdL_table, real(z2_table1),
      &   ff, nmax, mmax,
-     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,1.0)
+     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,0.25)
 
       title = 'Imag z2 table1'
       call ezconc(zetai_table, dKdL_table, aimag(z2_table1),
      &    ff, nmax, mmax,
-     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,1.0)
+     &   numb, ntable, mtable, nlevmax, title, titx, tity, iflag,0.25)
 
       titx = 'R (m)'
       tity = 'Z (m)'
@@ -5520,29 +5520,26 @@ c--Make a bit larger so the boundary doesn't get clipped
 
 c--Advance graphics frame and get ready to plot
 
-      call pgsci(nblack)
+c     ! call pgsci(nblack)
       call pgenv(xmin, xmax, ymin, ymax, 1, 0)
 
 c Call plotter once for f < 0 (dashed), once for f > 0 (solid lines).
 
       if(nlevlt .gt. 0) then
-         
          call pgsci(nmagenta)
          call pgcont(f, nrmax, nthmax, 1, nr, 1, nth, flevel(ilevlt),
      &        nlevlt, tr)
-!         call pgconl(f, nrmax, nthmax, 1, nr, 1, nth, flevel(ilevlt),
-!              nlevlt, tr)
       endif
 
       if(nlevgt .gt. 0) then
-         CALL PGSFS(1)
-         DO I=1, Nlevel-1
-            RCOL = 0.5+0.5*REAL(I-1)/REAL(NLEVEL-1)
-            CALL PGSCR(I+10, RCOL, RCOL, RCOL)
-            CALL PGSCI(I+10)
-            CALL PGCONF(f, nrmax, nthmax, 1, nr, 1, nth,
-     &        flevel(I),flevel(I+1),TR)
-         END DO
+!         CALL PGSFS(1)
+!         DO I=1, Nlevel-1
+!            RCOL = 0.5+0.5*REAL(I-1)/REAL(NLEVEL-1)
+!            CALL PGSCR(I+10, RCOL, RCOL, RCOL)
+!            CALL PGSCI(I+10)
+!            CALL PGCONF(f, nrmax, nthmax, 1, nr, 1, nth,
+!     &        flevel(I),flevel(I+1),TR)
+!         END DO
          call pgsci(nblue)
          call pgcont(f, nrmax, nthmax, 1, nr, 1, nth, flevel(ilevgt),
      &       nlevgt, tr)
@@ -5553,7 +5550,6 @@ c Call plotter once for f < 0 (dashed), once for f > 0 (solid lines).
 
   310 format(1p,6e12.4)
   312 format(i10, 1p,6e12.4)
-
 
       return
       end
@@ -6825,20 +6821,21 @@ c
 
       CALL PGSCI(nblue)
       call pgmtxt('l', 2.0, 0.5, 0.5, titll)
-
-
       call pgline(nr, x1, y1)
 
-      if(y2max .eq. 0.0 .and. y2min .eq. 0.0)return
-      CALL PGSWIN (rhomin, rhomax, y2min, y2max)
-      CALL PGSCI(nblack)
-      CALL PGBOX  (' ', 0.0, 0, 'CMST', 0.0, 0)
+      if(y2max .ne. 0.0 .and. y2min .ne. 0.0) then
+         CALL PGSWIN (rhomin, rhomax, y2min, y2max)
+         CALL PGSCI(nblack)
+         CALL PGBOX  (' ', 0.0, 0, 'CMST', 0.0, 0)
 
-      CALL PGSCI(ngreen)
-      call pgline(nr, x1, y2)
-      call PGMTXT ('r', 2.0, 0.5, 0.5, titlr)
-
-      CALL PGSCI(nblack)
+         CALL PGSCI(ngreen)
+         call pgline(nr, x1, y2)
+         call PGMTXT ('r', 2.0, 0.5, 0.5, titlr)
+         CALL PGSCI(nblack)
+      else
+         CALL PGSCI(nblack)
+         CALL PGBOX  ('BCNST', 0.0, 0, 'BCNST', 0.0, 0)
+      end if
 
 
   300 format (1p,9e11.3)

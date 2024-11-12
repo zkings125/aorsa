@@ -1554,11 +1554,9 @@ c           write(6, 1314) i, j, psix, psilim_
                if(ncell .eq. 0 .and. n_phi .eq. 1)nphi_enter = n_phi
                if(ncell .eq. 0 .and. n_phi .ne. 1)nphi_enter = n_phi - 1
 
-!               write(6,*) 'extint call 1558a ',phi,h0
                call extint(nmax, phi, y_phi, f, h0, mmax, error)
                !write(*,*) 'extint 1558b',phi,h0
                ncell = ncell + 1
-!               write(6,*) 'extint call 1558b ',phi,h0
 
                xprimex = y_phi(1)
                yprimex = y_phi(2)
@@ -1649,9 +1647,7 @@ c               h0 = twopi / 360.
 
                   h0 = abs(2.0 * delta_x / (dxdphi + dxdphi_prev))
 
-                  !write(6,*) 'extint call 1558e ',phi,h0
                   call extint(nmax, phi, y_phi, f, h0, mmax, error)
-                  !write(6,*) 'extint call 1558f ',phi,h0                  
                   xprimex = y_phi(1)
                   yprimex = y_phi(2)
 
@@ -1795,9 +1791,7 @@ c     &                i_box
                   delta_y = yprime_want - yprime_prev
 
                   h0 = abs(2.0 * delta_y / (dydphi + dydphi_prev))
-                  write(6,*) 'extint call 1558f ',phi,h0
                   call extint(nmax, phi, y_phi, f, h0, mmax, error)
-                  write(6,*) 'extint call 1558g ',phi,h0                  
                   xprimex = y_phi(1)
                   yprimex = y_phi(2)
 
@@ -1923,7 +1917,6 @@ c     &                i_box
                  if (delta_b .ge. 1.0e-05 .and. i_stop .eq. 0)i_stop = 1
                  if (delta_b .lt. -1.0e-05 .and. i_stop .eq. 1)go to 201
               end if
-              write(6,*) 'extint call 1558c ',phi,h0
            end do       ! end of n_phi loop along orbit !
 *          -----------------------
 *          End of field line trace
@@ -4565,9 +4558,7 @@ c           write(6, 1314) i, j, psix, psilim_
                if(ncell .eq. 0 .and. n_phi .eq. 1)nphi_enter = n_phi
                if(ncell .eq. 0 .and. n_phi .ne. 1)nphi_enter = n_phi - 1
                
-               write(6,*) 'extint call 1558h ',phi,h0
                call extint(nmax, phi, y_phi, f, h0, mmax, error)
-               write(6,*) 'extint call 1558i ',phi,h0
                ncell = ncell + 1
 
 
@@ -4660,9 +4651,7 @@ C                h0 = twopi / 360.
 
                   h0 = abs(2.0 * delta_x / (dxdphi + dxdphi_prev))
 
-                  write(6,*) 'extint call 1558j ',phi,h0
                   call extint(nmax, phi, y_phi, f, h0, mmax, error)
-                  write(6,*) 'extint call 1558k ',phi,h0
                   
                   xprimex = y_phi(1)
                   yprimex = y_phi(2)
