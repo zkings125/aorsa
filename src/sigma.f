@@ -1502,7 +1502,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
      .   z0_table, z1_table, z2_table, zetai_table, dKdL_table, 
      .   dKdL_giv, nmax, mmax,  use_new_z2, ntable, mtable, sige3_new)
 
-     
 
 
 *     ---------------------------------------------------------
@@ -1511,7 +1510,7 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-      
+
       implicit none
       
       real, dimension(:,:), allocatable :: DFDUPER0, DFDUPAR0

@@ -1083,14 +1083,14 @@ c
      &     nnodey, numb, nxmx, nymx, nlevmax, title, titx, tity,
      &     scalex)
 
-      title = 'ipsi'
+      title = 'I(psi) m-T'
       call ezconc(capr, y, ipsi, ff, nnodex, nnodey, numb,
      &   nxmx, nymx, nlevmax, title, titx, tity, iflag,scalex)
       if (iflag .eq. 0) call boundary (capr, y, rho, ff, nnodex,
      &     nnodey, numb, nxmx, nymx, nlevmax, title, titx, tity,
      &     scalex)
 
-      title= 'I(psi) '
+      title= 'I(psi) = R B_{phi}'
       titll= 'I(psi) m-T'
       titlr='       '
       call ezplot0(title, titll, titlr, rhon, ipsi_avg,
