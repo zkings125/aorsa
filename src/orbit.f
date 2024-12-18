@@ -75,7 +75,7 @@ c
 
       integer nrhomax
 
-      integer n_theta_max, n_u_max, n_psi_max, n_theta_check
+      integer n_theta_max, n_u_max, n_psi_max
      
       parameter (n_theta_max = 200)
       parameter (n_u_max = 200)
