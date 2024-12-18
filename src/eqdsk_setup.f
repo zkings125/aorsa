@@ -1448,7 +1448,7 @@ c         write(18, 310) ((rho_tor2d(i, j), i = 1,nnodex),j = 1,nnodey)
      
 
 
-      n_theta_check = 75
+      n_theta_check = int(n_theta_max/2.)
      
 
 c      do i = 2, nnodex - 1
@@ -1460,7 +1460,9 @@ c        do j = 1, nnodey - 1
 
             capr_x0 = capr(i) + dx / 2.0
             capz_x0 = y(j) + dy / 2.0
-            write(*,*) 'eq setup, field lines', i,capr_x0,capz_x0
+            if (myid==0) then
+               write(*,*) 'eq setup, field lines', i,capr_x0,capz_x0
+            end if
             x_extint = capr_x0 - rt
             y_extint = capz_x0
 
@@ -1999,8 +2001,9 @@ c             tau_bounce(i, j, n_theta) = dtau_tot12
            
            dldb_tot12(i,j) = dldb_tot1 + dldb_tot2
            
-c          write(6, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
-          write(*, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j),i,j
+           if (myid==0) then
+              write(6, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j),i,j
+           end if
            
            i_sav = i
            j_sav = j

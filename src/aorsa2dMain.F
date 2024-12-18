@@ -418,6 +418,7 @@ c     &        yy_inv(mkdim1 : mkdim2, 1 : nymx)
      &   omgci10, omgrf, xmax, qi2, qi3,
      &   costh, sinth, radius, rnx,  rny, rnphi
       real :: ymaxp, yminp, xminp, xmaxp
+      complex ::  omgrfc
       real :: rhoi20, vthi20, omgci20
       real :: rhoi30, vthi30, omgci30
       real :: rhoi40, vthi40, omgci40
@@ -607,7 +608,7 @@ c     &        yy_inv(mkdim1 : mkdim2, 1 : nymx)
      &   bmod2, rhom1, bxn, byn, bzn, pressi, muhat, nu_star,
      &   ipsi, xna_slo, gradprlb, omgp2_slo, omgci_slo, zeff,
      &   rho_pol2d, psi_pol2d, drhodr, drhodz,
-     &   dthedr, dthedz, reomg1a, reomg2a, reomg3a, xjx, xjy, xjz,
+     &   dthedr, dthedz, reomg1a, reomg2a, reomg3a, xjx, xjy, xjz,xjt,
      &   ntilda_e_real, reomglha
 
       real :: cur_mod, cur_mod_max, npar
@@ -911,6 +912,7 @@ c       complex, dimension(:,:), allocatable :: Btmp
 
 
       integer :: indxg2p,indxg2l,indxl2g
+      integer :: ierr
       external indxg2p,indxg2l,indxl2g
 
 *     ---------------
@@ -1000,7 +1002,7 @@ c       complex, dimension(:,:), allocatable :: Btmp
      &   dthedr(nxmx, nymx),  dthedz(nxmx, nymx),
      &   reomg1a(nxmx, nymx), reomg2a(nxmx, nymx), reomg3a(nxmx, nymx),
      &   xjx(nxmx, nymx), xjy(nxmx, nymx), xjz(nxmx, nymx),
-     &   reomglha(nxmx, nymx))
+     &   xjt(nxmx, nymx), reomglha(nxmx, nymx))
 
 
       allocate (wdote(nxmx, nymx), wdoti1(nxmx, nymx),
@@ -1459,6 +1461,7 @@ c      jequat  = nnodey / 2
       xnurf = freqcy
 
       omgrf = 2.0 * pi * xnurf
+      omgrfc = omgrf*(1.+zi*xnuome)
 
 
       if (plot_only .eqv. .true.)go to 9002
@@ -3330,6 +3333,7 @@ c                  antlc = pi / (xk0 * antlen)
 
 
                end if
+               if(curved_ant .eqv. .true.) shapey=gaussantth
 
                Ix = - dpsidy / gradpsi * cos_antang
                Iy =   dpsidx / gradpsi * cos_antang
@@ -3365,7 +3369,6 @@ c                  antlc = pi / (xk0 * antlen)
 
          end do
       end do
-
 *     ----------------------------
 *     find maximum antenna current
 *     ----------------------------
@@ -3492,6 +3495,7 @@ c                  antlc = pi / (xk0 * antlen)
      &                               - z_slo * xna_slo(i, j)   ) / z1
 
                if (xn1a(i, j) .le. 0.0) then
+                  if(myid == 0) write(6,*) 'xn1a',xn1a(i,j),i,j
                   xn1a(i, j) = 1.0e-10
                   if(myid .eq.0) write(6, *) xnea(i,j), xn1a(i,j),
      &               xn2a(i,j), xn3a(i,j), xn4a(i,j), xn5a(i,j),
@@ -4547,22 +4551,22 @@ c     &                             + pressi4 pressi5 + pressi6
             xc(i,j) = -zi / omgrf / eps0 * xjy(i,j)
             xd(i,j) = -zi / omgrf / eps0 * xjz(i,j)
 
-            capk_perp = 1.0 - omgpe2(i,j) / (omgrf**2 - omgce(i,j)**2)
-     &                      - omgp12(i,j) / (omgrf**2 - omgci1(i,j)**2)
-     &                      - omgp22(i,j) / (omgrf**2 - omgci2(i,j)**2)
-     &                      - omgp32(i,j) / (omgrf**2 - omgci3(i,j)**2)
-     &                      - omgp42(i,j) / (omgrf**2 - omgci4(i,j)**2)
-     &                      - omgp52(i,j) / (omgrf**2 - omgci5(i,j)**2)
-     &                      - omgp62(i,j) / (omgrf**2 - omgci6(i,j)**2)
+            capk_perp =1.0 - omgpe2(i,j) / (omgrfc**2 - omgce(i,j)**2)
+     &                     - omgp12(i,j) / (omgrfc**2 - omgci1(i,j)**2)
+     &                     - omgp22(i,j) / (omgrfc**2 - omgci2(i,j)**2)
+     &                     - omgp32(i,j) / (omgrfc**2 - omgci3(i,j)**2)
+     &                     - omgp42(i,j) / (omgrfc**2 - omgci4(i,j)**2)
+     &                     - omgp52(i,j) / (omgrfc**2 - omgci5(i,j)**2)
+     &                     - omgp62(i,j) / (omgrfc**2 - omgci6(i,j)**2)
 
-            capk_x =(omgce(i,j) * omgpe2(i,j)/(omgrf**2-omgce(i,j)**2)
-     &            + omgci1(i,j) * omgp12(i,j)/(omgrf**2-omgci1(i,j)**2)
-     &            + omgci2(i,j) * omgp22(i,j)/(omgrf**2-omgci2(i,j)**2)
-     &            + omgci3(i,j) * omgp32(i,j)/(omgrf**2-omgci3(i,j)**2)
-     &            + omgci4(i,j) * omgp42(i,j)/(omgrf**2-omgci4(i,j)**2)
-     &            + omgci5(i,j) * omgp52(i,j)/(omgrf**2-omgci5(i,j)**2)
-     &            + omgci6(i,j) * omgp62(i,j)/(omgrf**2-omgci6(i,j)**2))
-     &             / omgrf
+            capk_x =(omgce(i,j) * omgpe2(i,j)/(omgrfc**2-omgce(i,j)**2)
+     &           + omgci1(i,j) * omgp12(i,j)/(omgrfc**2-omgci1(i,j)**2)
+     &           + omgci2(i,j) * omgp22(i,j)/(omgrfc**2-omgci2(i,j)**2)
+     &           + omgci3(i,j) * omgp32(i,j)/(omgrfc**2-omgci3(i,j)**2)
+     &           + omgci4(i,j) * omgp42(i,j)/(omgrfc**2-omgci4(i,j)**2)
+     &           + omgci5(i,j) * omgp52(i,j)/(omgrfc**2-omgci5(i,j)**2)
+     &           + omgci6(i,j) * omgp62(i,j)/(omgrfc**2-omgci6(i,j)**2))
+     &           / omgrfc
 
            left  = capk_perp - capk_x
            right = capk_perp + capk_x
@@ -5229,16 +5233,27 @@ c           call flush
         stop '** error ** '
       endif
 
-!if not static
+
       call pzgecon('1', nrow, p_amat, 1, 1, desc_amat, anorm, rcond,
      &          sworkn, -1, srwork, -1, info)
-      write(*,*) 'pzgecon',sworkn(1),srwork(1),nxmx,desc_amat
+      if (myid==0) then
+         write(*,*) 'pzgecon',sworkn(1),srwork(1),nxmx,desc_amat
+      end if
       lwork = int(sworkn(1))
+
       lrwork = int(srwork(1)) !jcw temp
 
-      allocate (workn(lwork))
-      allocate (rwork(lrwork))
-!fi
+      allocate (workn(lwork),stat=ierr)
+      if (ierr.ne.0) then
+         write(*,*) myid,ierr,'failed to allocate workn',lwork
+         stop
+      end if
+      allocate (rwork(lrwork),stat=ierr)
+      if (ierr.ne.0) then
+         write(*,*) myid,ierr,'failed to allocate rwork',lrwork
+         stop
+      end if
+
       do irnc=1,nrow_local*ncol_local
         p_amat(irnc) = cmplx(0., 0.)
       enddo
@@ -8936,6 +8951,7 @@ c                 c_ehst = 1.0
       xjx = xjx * sqrt(pscale)
       xjy = xjy * sqrt(pscale)
       xjz = xjz * sqrt(pscale)
+      xjt = sqrt(xjx**2+xjy**2+xjz**2 )
 
       do n = nkx1, nkx2
          do m = nky1, nky2
@@ -9683,7 +9699,7 @@ c           if(nnode_local .le. 0)xjprl(i,j) = redotj_ehst(i,j)
       call sgrator(x, y, redotjt, 1, nnodex, 1, nnodey, pedotjt,
      &   capr, rt, nxmx, nymx)
 
-      call sgrator1(x, y, xjy, 1, nnodex, 1, nnodey, i_ant,
+      call sgrator1(x, y, xjt, 1, nnodex, 1, nnodey, i_ant,
      &   capr, rt, nxmx, nymx, j_cur_max)
 
       call sgrator(x, y, xjprl, 1, nnodex, 1, nnodey, xjtot,
