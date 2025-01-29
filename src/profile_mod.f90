@@ -52,31 +52,31 @@
     integer, parameter :: swim_string_length = 128
 
     
+    INTEGER :: n_rho = 0                   ! if read in from /nstate/ and non zero, initial arrays to size
+    INTEGER :: S_nspec_th                  ! number of thermal ion species
+    character(len = 32) ::      &
+        S_s_name(0:n_spec_max)             ! names of main species, (0:nspec_th)
+    REAL (KIND = rspec) ::      &
+        S_q_s(0:n_spec_th_max), &          ! charge of species s [C], (0:nspec_th)
+     &  S_m_s(0:n_spec_th_max)             ! mass of species s [kg], (0:nspec_th)
     
-    INTEGER :: S_nspec_th                    ! number of thermal ion species
-    character(len = 32) ::  &
-        S_s_name(0:n_spec_max)              ! names of main species, (0:nspec_th)
-    REAL (KIND = rspec) :: &
-        S_q_s(0:n_spec_th_max),              & ! charge of species s [C], (0:nspec_th)
-     &  S_m_s(0:n_spec_th_max)                 ! mass of species s [kg], (0:nspec_th)
-    
-    INTEGER :: S_nrho_n          ! number of rho values in thermal species density grid
-    REAL (KIND = rspec) :: &
-        S_rho_n_grid(nrho_max),       & ! rho values in density grid, (1:nrho_n)
-     &  S_n_s(nrho_max, 0:n_spec_th_max),           & ! density profile of species s, (1:nrho_n, 0:nspec_th)
-     &  S_zeff(nrho_max),           & ! effective impurity charge profile, (1:nrho_n)
-     &  S_m_impurity(nrho_max)              ! effective impurity mass profile, (1:nrho_n)
+    INTEGER :: S_nrho_n                    ! number of rho values in thermal species density grid
+    REAL (KIND = rspec) ::               &
+        S_rho_n_grid(nrho_max),          & ! rho values in density grid, (1:nrho_n)
+     &  S_n_s(nrho_max, 0:n_spec_th_max),& ! density profile of species s, (1:nrho_n, 0:nspec_th)
+     &  S_zeff(nrho_max),                & ! effective impurity charge profile, (1:nrho_n)
+     &  S_m_impurity(nrho_max)             ! effective impurity mass profile, (1:nrho_n)
  
-    INTEGER :: S_nrho_T          ! number of rho values in temperature grid
-    REAL (KIND = rspec) :: &
-        S_rho_T_grid(nrho_max),       & ! rho values in temperature grid, (1:nrho_T)
-      & S_T_s(nrho_max, 0:n_spec_th_max)              ! Temperature profile of species s, (1:nrho_T, 0:nspec_th)
+    INTEGER :: S_nrho_T                    ! number of rho values in temperature grid
+    REAL (KIND = rspec) ::     &
+        S_rho_T_grid(nrho_max),&           ! rho values in temperature grid, (1:nrho_T)
+      & S_T_s(nrho_max, 0:n_spec_th_max)   ! Temperature profile of species s, (1:nrho_T, 0:nspec_th)
  
-    INTEGER :: S_nrho_v_par      ! number of main rho values in parallel velocity grid
+    INTEGER :: S_nrho_v_par                ! number of main rho values in parallel velocity grid
 !    REAL (KIND = rspec), ALLOCATABLE :: &
 !        PS_rho_v_par_grid(:),   & ! rho values in parallel velocity grid, (1:nrho_v_par)
 !      & PS_v_par_s(:, :)        & ! v parallel profile of species s, 
-                                  ! (1:nrho_v_par, 0:nspec_th)
+                                   ! (1:nrho_v_par, 0:nspec_th)
  
     !-----------------------------------
     ! Non-Maxwellian Species
@@ -84,11 +84,11 @@
     
     INTEGER :: S_nspec_nonMax    ! number of non-Maxwellian species
     character(len=32), dimension(n_spec_nm_max ) :: &
-        S_nonMax_name         ! names of non-Maxwellian species, (1:nspec_nonMax)
+        S_nonMax_name            ! names of non-Maxwellian species, (1:nspec_nonMax)
     
     REAL (KIND = rspec), dimension(n_spec_nm_max ) :: &
-        S_q_nonMax_s,       & ! charge of species s [C], (1:nspec_nonMax)
-        S_m_nonMaX_s          ! mass of species s [kg], (1:nspec_nonMax)
+        S_q_nonMax_s,       &    ! charge of species s [C], (1:nspec_nonMax)
+        S_m_nonMaX_s             ! mass of species s [kg], (1:nspec_nonMax)
     
     INTEGER :: S_ntheta_n        ! number of theta values in 2D density grid
 
@@ -168,44 +168,51 @@
     ! N.B. We will want to put in 2D power deposition profiles, but I don't think they
     ! are needed for our initial coupling
         
-    INTEGER ::  &
-        S_nrho_prf,    &   ! number rho values for RF power deposition grid
-        S_ntheta_prf   ! number of theta values in 2D RF power dep grid
+    INTEGER ::         &
+        S_nrho_prf,    &         ! number rho values for RF power deposition grid
+        S_ntheta_prf             ! number of theta values in 2D RF power dep grid
         
     REAL (KIND = rspec), ALLOCATABLE :: &
-        S_rho_prf_grid(:), & ! rho values in RF power deposition grid, (1:nrho__prf)
-        S_prf2D_src_s(:,:,:,:),   & ! 2D Power deposition from each source into each 
-                                                        ! species, (1:nrho__prf, 1:nrf_src, 0:nspec)
-        S_prf_src_s(:,:,:)  ! Power deposition profile from each source into each 
-                              ! species, (1:nrho__prf, 1:nrf_src, 0:nspec)
-    real(kind = rspec) ::   S_prf_total_s(nrho_max,0:n_spec_max)   ! Total rf power deposition profile into each species
-                              ! summed over sources, (1:nrho__prf, 0:nspec)
+        S_rho_prf_grid(:),     & ! rho values in RF power deposition grid, (1:nrho__prf)
+        S_prf2D_src_s(:,:,:,:),& ! 2D Power deposition from each source into each 
+                                 !        species, (1:nrho__prf, 1:nrf_src, 0:nspec)
+        S_prf_src_s(:,:,:)       ! Power deposition profile from each source into each 
+                                 !        species, (1:nrho__prf, 1:nrf_src, 0:nspec)
+    real(kind = rspec) ::   S_prf_total_s(nrho_max,0:n_spec_max)
+                                 ! Total rf power deposition profile into each species
+                                 ! summed over sources, (1:nrho__prf, 0:nspec)
     
     integer :: S_nrho_cdrf(n_spec_max) ! # of rho values for RF current drive grid for each species
         
     REAL (KIND = rspec), ALLOCATABLE :: &
         S_rho_cdrf_grid(:),    & ! rho values in RF current drive grid, (1:nrho__cdrf)
         S_cdrf_src_s(:,:,:),   & ! Driven current profile from each source, in each species
-                                  ! (1:nrho__cdrf, 1:nrf_src, 1:nspec_nonMax)
+                                 !           (1:nrho__cdrf, 1:nrf_src, 1:nspec_nonMax)
         S_cdrf_total_s(:,:)      ! Total current driven by all sources in each species
     
  
     character(len = swim_string_length), dimension(n_spec_nm_max)  :: &
-        S_ql_operator          ! quasilinear operator for each non Maxwellian--file name 
-                                ! species, (1:nspec_nonMax)
+        S_ql_operator            ! quasilinear operator for each non Maxwellian--file name 
+                                 ! species, (1:nspec_nonMax)
     character(len = swim_string_length), dimension(n_spec_nm_max) :: &
-        S_distribution_fun      ! distribution function for each non Maxwellian species
+        S_distribution_fun       ! distribution function for each non Maxwellian species
 
 
-
-    namelist /state/ S_t0, S_t1, S_r_axis, S_z_axis, S_r0_mach, &
-       S_z0_mach, S_r_min, S_r_max, S_z_min, S_z_max, &
-       S_nspec,S_nspec_th,S_s_name, S_q_s, S_m_s,  &
-       S_nrho_n, S_rho_n_grid, S_n_s, S_zeff, S_m_impurity, &
-       S_nrho_T, S_rho_T_grid   , S_T_S , S_ant_model_src, S_ql_operator, &
+    namelist /nstate/ S_nrho, S_nrho_n, S_nrho_T, S_nspec, S_nspec_th
+    namelist /state/ S_t0, S_t1, S_r_axis, S_z_axis, S_r0_mach,        &
+       S_z0_mach, S_r_min, S_r_max, S_z_min, S_z_max,                  &
+       S_nspec, S_nspec_th, S_s_name, S_q_s, S_m_s,                    &
+       S_nrho_n, S_rho_n_grid, S_n_s, S_zeff, S_m_impurity,            &
+       S_nrho_T, S_rho_T_grid, S_T_S , S_ant_model_src, S_ql_operator, &
        S_distribution_fun     
 
+    contains
+      subroutine new_state
+      end subroutine new_state
 
+      subroutine free_state
+      end subroutine free_state
+      
     end module profile_mod
       
 
