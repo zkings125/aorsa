@@ -3076,31 +3076,48 @@ c     &       capr(i)
          rn(n) = rhon(n) * rmax
          epsn(n) = rn(n) / rt
          dn(n) = rmax**2 / taue
-c         if (myid .eq. 0)write(6, 1312)n, rn(n), rhon(n), dn(n)
 c         if (myid .eq. 0)write(15, 1312)n, rn(n), rhon(n), dn(n)
       end do
 
-      do i = 1, nnodex
+
+      ! The following find the point within drho of 0.
+      ! May fail in a coarse mesh. drho for uniform mesh as well
+      ! Could be replaced with minloc call
+      loopi1: do i = 1, nnodex
          do j = 1, nnodey
             n = int(rho(i,j) / drho) + 1
             if (n .eq. 1) then
                i0 = i
                j0 = j
+               exit loopi1
             end if
-         end do
-      end do
+         end do 
+      end do loopi1
 
       if(i0 .eq. 0 .and. j0 .eq. 0) then
-         do i = 1, nnodex
+         loopi2: do i = 1, nnodex
             do j = 1, nnodey
                n = int(rho(i,j) / drho) + 1
                if (n .eq. 2) then
                   i0 = i
                   j0 = j
+                  exit loopi2
                end if
             end do
-         end do
-
+         end do loopi2
+      end if
+      
+      if(i0 .eq. 0 .and. j0 .eq. 0) then
+         loopi3: do i = 1, nnodex               
+            do j = 1, nnodey         
+               n = int(rho(i,j) / drho) + 1
+               if (n .eq. 3) then
+                  i0 = i
+                  j0 = j
+                  exit loopi3
+               end if
+            end do
+         end do loopi3
       end if
 
 

@@ -1461,7 +1461,7 @@ c        do j = 1, nnodey - 1
 
             capr_x0 = capr(i) + dx / 2.0
             capz_x0 = y(j) + dy / 2.0
-
+            write(*,*) 'eq setup, field lines', i,capr_x0,capz_x0
             x_extint = capr_x0 - rt
             y_extint = capz_x0
 
@@ -1493,11 +1493,11 @@ c           write(6, 1314) i, j, psix, psilim_
 *           Set extint parameters
 *           ---------------------
             
-            h0 = 1.0e-04
+            h0 = 1.0e-03
             nmax = 2
       
-            mmax = 4
-            eps = 1.0e-06
+            mmax = 6
+            eps = 1.0e-04
       
             do i_err = 1, nmax
                s_err(i_err)=.1
@@ -1554,10 +1554,12 @@ c           write(6, 1314) i, j, psix, psilim_
 
                if(ncell .eq. 0 .and. n_phi .eq. 1)nphi_enter = n_phi
                if(ncell .eq. 0 .and. n_phi .ne. 1)nphi_enter = n_phi - 1
-               write(6,*) 'extint call 1558a ',phi,h0
+
+!               write(6,*) 'extint call 1558a ',phi,h0
                call extint(nmax, phi, y_phi, f, h0, mmax, error)
+               !write(*,*) 'extint 1558b',phi,h0
                ncell = ncell + 1
-               write(6,*) 'extint call 1558b ',phi,h0
+!               write(6,*) 'extint call 1558b ',phi,h0
 
                xprimex = y_phi(1)
                yprimex = y_phi(2)
@@ -1621,7 +1623,7 @@ c     &            zprimex, bratio_phi, icell, jcell, fcount
 
 
 c               h0 = twopi / 720.
-                h0 = twopi / 360.
+c               h0 = twopi / 360.
                 
                 go to 200
 
@@ -1648,9 +1650,9 @@ c               h0 = twopi / 720.
 
                   h0 = abs(2.0 * delta_x / (dxdphi + dxdphi_prev))
 
-                  write(6,*) 'extint call 1558e ',phi,h0
+                  !write(6,*) 'extint call 1558e ',phi,h0
                   call extint(nmax, phi, y_phi, f, h0, mmax, error)
-                  write(6,*) 'extint call 1558f ',phi,h0                  
+                  !write(6,*) 'extint call 1558f ',phi,h0                  
                   xprimex = y_phi(1)
                   yprimex = y_phi(2)
 
@@ -4579,8 +4581,8 @@ c           write(6, 1314) i, j, psix, psilim_
 
                delta_x = xprimex - xprime_prev
                delta_y = yprimex - yprime_prev
-               delta_phi = phi - phi_prev
-               delta_z = caprx * delta_phi
+               delta_phi = 0. !phi - phi_prev
+               delta_z = 0. !caprx * delta_phi
                
                delta_l = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
                length = length + delta_l
@@ -4633,7 +4635,7 @@ c     &            zprimex, bratio_phi, icell, jcell, fcount
 
 
 c               h0 = twopi / 720.
-                h0 = twopi / 360.
+C                h0 = twopi / 360.
                 
                 go to 200
 

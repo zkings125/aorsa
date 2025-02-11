@@ -1,12 +1,12 @@
 include compileropts.gnu
 
-FC = mpif90.openmpi
+FC = mpif90.openmpi -cpp -g -O0
 
 # pgplot
-LIBS += -L/usr/lib/ -lpgplot 
-
+LIBS += -L/usr/lib/x86_64-linux-gnu/ -lgiza -lpgplot 
+DEFS += -DGIZA -DDEBUG
 # netcdf
-NETCDF_DIR = /usr/lib/aarch64-linux-gnu
+NETCDF_DIR = /usr/lib/x86_64-linux-gnu
 LIBS += $(NETCDF_DIR)/libnetcdff.a -L $(NETCDF_DIR) -lnetcdf 
 INCLUDE_DIRS += -I /usr/include
 
