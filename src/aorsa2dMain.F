@@ -4575,7 +4575,7 @@ c            acold(i,j) = xnphi**2 - capk_perp
             ccold(i,j) = right - xnphi**2
 
             xkperp_cold2(i,j) = bcold(i,j) * ccold(i,j) / acold(i,j)
-            xkperp_cold(i,j) = csqrt(xkperp_cold2(i,j))
+            xkperp_cold(i,j) = sqrt(xkperp_cold2(i,j))
             if (j .eq. jmid) kimag_cold(i) = aimag(xkperp_cold(i,j))
 
          end do
@@ -5574,6 +5574,7 @@ c               end if
             end if    ! end if use_fourier_z2 .eq. .true.
 
 
+            !within loop over 2d space, loop over wavenumbers
             do n = nkx1, nkx2
                do m = nky1, nky2
 
@@ -5731,7 +5732,7 @@ c               end if
                         end if
 
 
-                         if (use_fourier_z2 .eqv. .true. .and.
+                        if (use_fourier_z2 .and.
      &                                    psi(i,j) .lt. psiorb) then
 *                        ----------------------------------------------
 *                        Evaluate AORSA basis function along field line
@@ -5742,24 +5743,24 @@ c               end if
      &                              + nphi      * phin_lb(nl)
                               El(nl) = exp(zi * psil)
                            end do
-*                     -------------------------------------------------
-*                    fft on lb mesh giving nnodelb modes (nkl1 to nkl2)
-*                     -------------------------------------------------
+*                        -------------------------------------------------
+*                        fft on lb mesh giving nnodelb modes (nkl1 to nkl2)
+*                        -------------------------------------------------
                            call fftn2(El, workl, nnodelb, nlmx,
      &                                            nkldim1, nkldim2, Eln)
 
-*                    --------------------------------------------------
-*                    Evaluate current at lb = 0, or lbprime = lbmax / 2.
-*                    --------------------------------------------------
+*                        --------------------------------------------------
+*                        Evaluate current at lb = 0, or lbprime = lbmax / 2.
+*                        --------------------------------------------------
                            nl = nnodelb0
 
                            Esum = 0.0
                            Jzzsum = 0.0
 
-*                          ------------------------------------------------------
-*                          Calculate sigma_e (l = 0 harmonic) for each k in the
-*                             Fourier expansion along the field line - xklsav(nkl)
-*                          ------------------------------------------------------
+*                        ------------------------------------------------------
+*                        Calculate sigma_e (l = 0 harmonic) for each k in the
+*                           Fourier expansion along the field line - xklsav(nkl)
+*                        ------------------------------------------------------
                            do nkl = nkl1, nkl2
 
                               sige3_new = 0.0
@@ -5835,7 +5836,7 @@ c               end if
                         end if !  end if use_fourier_z2 = true and psi .lt. psiorb
 
 
-                        if(use_fourier_z2 .eqv. .false.) then
+                        if(.not.use_fourier_z2) then
 
                            sige3_new = 0.0
 
@@ -5870,7 +5871,7 @@ c               end if
                         end if    !  if   use_fourier_z2 .eq. .false.
 
 
-                        if(use_fourier_z2 .eqv. .true. .and.
+                        if(use_fourier_z2 .and.
      &                                   psi(i,j) .ge. psiorb) then
 
                            sige3_new = 0.0
@@ -6566,7 +6567,7 @@ c               end if
      &               .or. nboundary .eq. 0 .and. i .eq. 1
      &               .or. nboundary .eq. 0 .and. i .eq. nnodex
      &               .or. nboundary .eq. 0 .and. j .eq. 1
-     &               .or. nboundary .eq. 0 .and. j .eq. nnodey) then
+     &               .or. nboundary .eq. 0 .and. j .eq. nnodey) then !JCW add core boundary
 
 c                      if(psi(i,j) .gt. psilim .and. nboundary .eq. 1
 c     &               .or. nboundary .eq. 0 .and. i .le. 2
