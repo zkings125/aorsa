@@ -197,8 +197,8 @@
     character(len = swim_string_length), dimension(n_spec_nm_max) :: &
         S_distribution_fun       ! distribution function for each non Maxwellian species
 
-
-    namelist /nstate/ S_nrho, S_nrho_n, S_nrho_T, S_nspec, S_nspec_th
+! Not sure var can be in two namelists. Plan allocation in module.
+!    namelist /nstate/ S_nrho, S_nrho_n, S_nrho_T, S_nspec, S_nspec_th
     namelist /state/ S_t0, S_t1, S_r_axis, S_z_axis, S_r0_mach,        &
        S_z0_mach, S_r_min, S_r_max, S_z_min, S_z_max,                  &
        S_nspec, S_nspec_th, S_s_name, S_q_s, S_m_s,                    &
