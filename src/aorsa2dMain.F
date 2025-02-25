@@ -10590,7 +10590,7 @@ c         end do
 
 
          do n = nkx1, nkx2
-            write(6, *) "n = ",n, "xkb(nxmx/2, n) = ", xkb(nxmx/2, n)
+            write(6, *)"n = ",n,"xkb(nnodex/2, n) = ", xkb(nnodex/2, n)
          end do
 
          write(38, 309) nnoderho

@@ -490,8 +490,9 @@ c     .   nxmx, nymx, dr, dz)
       bphi =surf2(xprime, yprime, nnodex, nnodey, xprimea, yprimea,
      .   bzn, nxmx, zbzn, sigma)
 
-      modb =surf2(xprime, yprime, nnodex, nnodey, xprimea, yprimea,
-     .   bmod, nxmx, zbmod, sigma)
+      modb = sqrt(br**2+bz**2+bphi**2)
+!surf2(xprime, yprime, nnodex, nnodey, xprimea, yprimea,
+!     .   bmod, nxmx, zbmod, sigma)
      
       bratio_phi=surf2(xprime, yprime, nnodex, nnodey, xprimea, yprimea,
      .   bratio, nxmx, zbratio, sigma)
@@ -842,12 +843,22 @@ C     EVERY EXTRAPOLATION AS DOES THE B - S PROGRAM, IS ELIMINATED BY
 C     RESETTING S ONLY AFTER THE CORRESPONDING DEPENDENT VARIABLE HAS
 C     CONVERGED ACCORDING TO THE CRITERIA CHOSEN.
 
-      INTEGER M
-      REAL   DY(M)
-      LOGICAL CONV(M), FINISH
+!      INTEGER M
+!      REAL   DY(M)
+!      LOGICAL CONV(M), FINISH
+!      COMMON /ERRCOM/ EPS, S(100), Y(100), NMAX
+!      REAL   EPS, S, Y
+!      INTEGER NMAX, NTIMES (100)
+      IMPLICIT NONE
       COMMON /ERRCOM/ EPS, S(100), Y(100), NMAX
       REAL   EPS, S, Y
-      INTEGER NMAX, NTIMES (100)
+      INTEGER NMAX
+
+      INTEGER M
+      REAL   DY(NMAX)  !JCW bug fix was size M
+      LOGICAL CONV(NMAX), FINISH
+
+      INTEGER NTIMES(100), NCONV, N
 
 
       IF (M==1) THEN
