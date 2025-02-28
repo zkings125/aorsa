@@ -1460,9 +1460,9 @@ c        do j = 1, nnodey - 1
 
             capr_x0 = capr(i) + dx / 2.0
             capz_x0 = y(j) + dy / 2.0
-            if (myid==0) then
-               write(*,*) 'eq setup, field lines', i,capr_x0,capz_x0
-            end if
+!            if (myid==0) then
+!               write(*,*) 'eq setup, field lines', i,capr_x0,capz_x0
+!            end if
             x_extint = capr_x0 - rt
             y_extint = capz_x0
 
@@ -2001,9 +2001,9 @@ c             tau_bounce(i, j, n_theta) = dtau_tot12
            
            dldb_tot12(i,j) = dldb_tot1 + dldb_tot2
            
-           if (myid==0) then
-              write(6, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j),i,j
-           end if
+!           if (myid==0) then
+!              write(6, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j),i,j
+!           end if
            
            i_sav = i
            j_sav = j
@@ -2939,16 +2939,16 @@ c
       
       if(myid .eq. 0)then 
          write(15, *)       
-         write(15, *) "B_axis = ", beqd
-         write(15, *) "current = ", current
-         write(15, *) "psimag = ", psimag
-         write(15, *) "psilim = ", psilim   
+         write(15, *) "B_axis (eqdsk) = ", beqd
+         write(15, *) "curren (eqdsk) = ", current
+         write(15, *) "psimag (eqdsk) = ", psimag
+         write(15, *) "psilim (eqdsk) = ", psilim   
                          
          write(6, *)      
-         write(6, *) "B_axis = ", beqd
-         write(6, *) "current = ", current 
-         write(6, *) "psimag = ", psimag
-         write(6, *) "psilim = ", psilim                      
+         write(6, *) "B_axis (eqdsk)= ", beqd
+         write(6, *) "current(eqdsk)= ", current 
+         write(6, *) "psimag (eqdsk)= ", psimag
+         write(6, *) "psilim (eqdsk)= ", psilim                      
       end if        
       
       if(psilim .gt. psimag) then

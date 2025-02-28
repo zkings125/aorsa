@@ -3114,6 +3114,7 @@ c         if (myid .eq. 0)write(15, 1312)n, rn(n), rhon(n), dn(n)
          loopi3: do i = 1, nnodex               
             do j = 1, nnodey         
                n = int(rho(i,j) / drho) + 1
+               print *,'n',n,i,j,rho(i,j),drho
                if (n .eq. 3) then
                   i0 = i
                   j0 = j
@@ -4151,6 +4152,8 @@ c                     xkti6(i,j) = s_t_s(ndata,6)
          if (nboundary .eq. 1) then
             do i = 1, nnodex
                do j = 1, nnodey
+                  xnuomea(i,j) = xnuome !JCW can modify for internal resonances
+                  xnuomia(i,j) = xnuomi                  
                   if(rho(i,j) .gt. rholim) then
                      xnea(i,j) = 1.0e-10
                      zeff(i,j) = 1.0e-10
@@ -4221,7 +4224,7 @@ c                 xkti2(i,j) = xkti3(i,j)
          end do
 
 
-
+         write(*,*) 'i0, j0',i0,j0
          xn00 = xnea(i0, j0)
          xn10 = xn1a(i0, j0)
          xn20 = xn2a(i0, j0)
@@ -6577,11 +6580,12 @@ c               end if
 *                 --------------------------
 *                 metal boundary edge region:
 *                 --------------------------
-                  if(psi(i,j) .gt. psilim .and. nboundary .eq. 1
+                  if(     psi(i,j) .gt. psilim .and. nboundary .eq. 1
+     &               .or. psi(i,j) .lt. 0.6    .and. nboundary .eq. 1
      &               .or. nboundary .eq. 0 .and. i .eq. 1
      &               .or. nboundary .eq. 0 .and. i .eq. nnodex
      &               .or. nboundary .eq. 0 .and. j .eq. 1
-     &               .or. nboundary .eq. 0 .and. j .eq. nnodey) then
+     &               .or. nboundary .eq. 0 .and. j .eq. nnodey) then !JCW add core boundary
 
 c                      if(psi(i,j) .gt. psilim .and. nboundary .eq. 1
 c     &               .or. nboundary .eq. 0 .and. i .le. 2
@@ -10605,7 +10609,7 @@ c         end do
 
 
          do n = nkx1, nkx2
-            write(6, *) "n = ",n, "xkb(nxmx/2, n) = ", xkb(nxmx/2, n)
+            write(6, *) "n = ",n,"xkb(nnodex/2, n) = ",xkb(nnodex/2, n)
          end do
 
          write(38, 309) nnoderho

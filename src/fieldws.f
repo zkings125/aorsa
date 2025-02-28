@@ -748,7 +748,7 @@ c      write(6, *)"ebk(32,32)     = ", ezk(32,32)
 
 
       do n = 1, nkxplt  !JCW magic numbers fix
-         write(6, *) "n = ", n, "capd(nkxplt/2, n) = ",capd(nkxplt/2, n)
+         write(6, *) "n = ",n,"capd(nnodex/2, n) = ",capd(nnodex/2,n)
       end do
 
       read(38, 309) nnoderho
@@ -1661,7 +1661,7 @@ c      end do
 *     plot nu_star in 2-D
 *     -------------------
 
-      title = 'collisionality (nu_star)'
+      title = 'collisionality  (nu^{*})'
       call ezconc(capr, y, nu_star, ff, nnodex, nnodey, numb,
      &   nxmx, nymx, nlevmax, title, titx, tity, iflag,scalex)
       if (iflag .eq. 0) call boundary (capr, y, rho, ff, nnodex,
