@@ -1650,13 +1650,13 @@ c      end if
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c         if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0) then
+      !  if (rho .gt. 1.0) then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-         else
-            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-            dzetal(l) = 0.0
-         end if
+      !  else
+      !     zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+      !     dzetal(l) = 0.0
+      !  end if
          
 c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
 c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
@@ -2264,13 +2264,13 @@ c      end if
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c         if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0) then
+      !  if (rho .gt. 1.0) then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-         else
-            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-            dzetal(l) = 0.0
-         end if
+      !  else
+      !     zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+      !     dzetal(l) = 0.0
+      !  end if
          
 c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
 c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
@@ -2862,13 +2862,13 @@ c      end if
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c         if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0) then
+      !   if (rho .gt. 1.0) then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-         else
-            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-            dzetal(l) = 0.0
-         end if
+      !   else
+      !      zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+      !      dzetal(l) = 0.0
+      !   end if
          
 c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
 c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
