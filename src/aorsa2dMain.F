@@ -1,6 +1,10 @@
 
 *----------------------------------------------------------------------
-*     AORSA2D: version 20 (04-28-2010)
+*     AORSA2D: version 30 (04-010-2025)
+*     Code modernization, non square mesh working, mirror (R=0, Ip=0)
+*     Some memory and bounds errors fixed. Dynamic allocation begun
+      
+*     version 20 (04-28-2010)
 *     This version includes odd-order derivative in the conductivity
 *     Special eqdsk_setup for Alcator-C lower hybrid
 *        (eqdsk_special .ne. 0)
@@ -3114,7 +3118,7 @@ c         if (myid .eq. 0)write(15, 1312)n, rn(n), rhon(n), dn(n)
          loopi3: do i = 1, nnodex               
             do j = 1, nnodey         
                n = int(rho(i,j) / drho) + 1
-               print *,'n',n,i,j,rho(i,j),drho
+            print *,'n',n,i,j,rho(i,j),drho,minloc(int(rho(i,j) / drho))
                if (n .eq. 3) then
                   i0 = i
                   j0 = j
