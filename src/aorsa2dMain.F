@@ -3118,15 +3118,17 @@ c         if (myid .eq. 0)write(15, 1312)n, rn(n), rhon(n), dn(n)
          loopi3: do i = 1, nnodex               
             do j = 1, nnodey         
                n = int(rho(i,j) / drho) + 1
-            print *,'n',n,i,j,rho(i,j),drho,minloc(int(rho(i,j) / drho))
                if (n .eq. 3) then
                   i0 = i
                   j0 = j
                   exit loopi3
                end if
+               print *,'minloc n', n,i,j,rho(i,j)
             end do
          end do loopi3
       end if
+      print *,'minloc ',i0,j0,drho,
+     &  minloc(int(rho(1:nnodex,1:nnodey) / drho))
 
 
       dr = drho * rmax
