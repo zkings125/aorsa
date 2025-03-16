@@ -102,7 +102,7 @@ c      CHARACTER(128) :: root
       integer :: nnodex_loc, nx_overlap, nnodex_eff
       integer :: nnodey_loc, ny_overlap, nnodey_eff
       integer :: istart, ifinish, jstart, jfinish
-     &  i_seg, j_seg, iseg1, iseg2, jseg1, jseg2, i0, j0
+     &  i_seg, j_seg, iseg1, iseg2, jseg1, jseg2, i0, j0, loc0(2)
 
       integer :: nxmx,nymx,ieq, nlmx, nkldim1, nkldim2, nkl, nkl1, nkl2
       integer :: nmax, mmax
@@ -3067,15 +3067,13 @@ c--note curden is in Amps per meter of toroidal length (2.*pi*rt).
 *     ----------------------------------------
       j = jequat
       do i = 2, nnodex -1
-c         if (myid .eq. 0)write(6, 1312)i, rho(i,j), x(i), xprime(i),
-c     &       capr(i)
          if(rho(i,j) .lt. 1. .and. rho(i-1,j) .ge. 1.)caprmin = capr(i)
          if(rho(i,j) .gt. 1. .and. rho(i-1,j) .le. 1.)caprmax =capr(i-1)
       end do
 
       rmax = (caprmax - caprmin) / 2.0
 
-      if(myid .eq. 0)write(6, 311)caprmax, caprmin, rmax
+      if(myid .eq. 0) print *, 'caprmax', caprmax, caprmin, rmax
 
 
 
@@ -3123,13 +3121,13 @@ c         if (myid .eq. 0)write(15, 1312)n, rn(n), rhon(n), dn(n)
                   j0 = j
                   exit loopi3
                end if
-               print *,'minloc n', n,i,j,rho(i,j)
             end do
          end do loopi3
       end if
-      print *,'minloc ',i0,j0,drho,
-     &  minloc(int(rho(1:nnodex,1:nnodey) / drho))
-
+!      print *,'minloc ',i0,j0,
+!     &  minloc(int(rho(1:nnodex,1:nnodey) / drho))
+      loc0=minloc(int(rho(1:nnodex,1:nnodey) / drho))
+      i0=loc0(1) ; j0=loc0(2)
 
       dr = drho * rmax
 
@@ -4577,8 +4575,8 @@ c     &                             + pressi4 pressi5 + pressi6
      &           + omgci6(i,j) * omgp62(i,j)/(omgrfc**2-omgci6(i,j)**2))
      &           / omgrfc
 
-           left  = capk_perp - capk_x
-           right = capk_perp + capk_x
+            left  = capk_perp - capk_x !S-D=L
+            right = capk_perp + capk_x !S+D=R
 
             xnphi = bzn(i,j) * xkphi(i) / xk0
 c            acold(i,j) = xnphi**2 - capk_perp
@@ -9625,8 +9623,9 @@ c                 c_ehst = 1.0
       t1 = second1(dummy)
 *     ------------------------------------------------------------------------
 *     calculate individual species edotj's and driven current on solution mesh
+*     P = E*.J
 *     ------------------------------------------------------------------------
-
+ 
       do i = 1, nnodex
          do j = 1, nnodey
             redotje(i, j) = 0.5 * real(conjg(ealpha(i, j)) * xjpxe(i, j)

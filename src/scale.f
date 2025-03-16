@@ -94,7 +94,7 @@
 
       dy = y(2) - y(1)
       ybottom = y(1)
-c      yplot = 0.05
+
       yprime = yplot - ybottom
       jplot = yprime / dy + 1
       write(6, *) "jplot = ", jplot

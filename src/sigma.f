@@ -628,7 +628,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -910,7 +909,6 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -1468,7 +1466,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -1685,13 +1682,14 @@ c         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
 
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
-
+         if (lmax >0) then
          if(gammab(1) .gt. 1.0e-05)then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
-     .         / (2. * gammab(1) * y)
+     &           / (2. * gammab(1) * y)
+         endif   
          endif
-
+         
          xkprl_eff = xkprl / fgam 
 
       end if
@@ -1699,13 +1697,14 @@ c         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
 
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
-
+         if (lmax >0) then
          if(gammab(1) .gt. 1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
-     .         / (2. * gammab(1) * y)
+     &           / (2. * gammab(1) * y)
+         endif   
          endif
 
          xkprl_eff = xkprl / fgam 
@@ -2062,7 +2061,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -2670,7 +2668,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -3254,7 +3251,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -3401,7 +3397,6 @@ c     DLG: for the z slice on the magnetic axis (jmid)
 
 
 
-  100 format (1i10, 1p8e12.4)
   102 format (2i10)
       return
       end
@@ -3722,7 +3717,6 @@ c
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
       end
 
 c
@@ -3752,30 +3746,25 @@ c
       exgam = exp(-gamma)
       gammod = cabs(gamma)
 
- !     if(gammod .le. 700.)then
-         nmax = lmax + 1
- !        call besic(gamma, nmax, b, ier)
-         call cbesi(gamma, 0.0, 2, nmax+1, b,nz, ier)
-        if(ier .ne. 0)write(6,100) ier
+      nmax = lmax + 1
+      call cbesi(gamma, 0.0, 2, nmax+1, b,nz, ier)
+      if(ier .ne. 0)write(6,100) ier
 
-         do l = 0, lmax
-            xil(l) = b(l+1)
-         end do
+      do l = 0, lmax
+         xil(l) = b(l+1)
+      end do
 
-         do l = 0, lmax
-           if(l .eq. 0) xilp(0) = xil(1)
-           if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma * xil(l)  !derivative by recurrence
-           expbes(l) =  xil(l)  !*exgam JCW bad way to do this
-           expbesp(l) = xilp(l) !*exgam
-         end do
-!      end if
-
+      do l = 0, lmax
+         if(l .eq. 0) xilp(0) = xil(1)
+         if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma * xil(l) !derivative by recurrence
+         expbes(l) =  xil(l)
+         expbesp(l) = xilp(l)
+      end do
 
       do l = 0, lmax
          expbesovergam(l) = expbes(l) / gamma
       end do
-
-  100 format('ier = ', i5, 'besic failed')
+  100 format('ier = ', i5, 'cbesi failed')
       return
       end
 

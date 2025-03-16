@@ -5442,7 +5442,7 @@ c--set up contour levels
 
 #ifdef DEBUG
       write(6,*) 'ezconc title: ', title,
-     & ymin,ymax,xmin,xmax
+     & ymin,ymax,xmin,xmax,fmin,fmax
 #endif
       iflag = 0
       if(fmax .eq. 0.0 .and. fmin .eq. 0.0)then
@@ -5525,7 +5525,7 @@ c     ! call pgsci(nblack)
 
 c Call plotter once for f < 0 (dashed), once for f > 0 (solid lines).
 
-      if(nlevlt .gt. 0) then
+      if(nlevlt .lt. 0) then
          call pgsci(nmagenta)
          call pgcont(f, nrmax, nthmax, 1, nr, 1, nth, flevel(ilevlt),
      &        nlevlt, tr)

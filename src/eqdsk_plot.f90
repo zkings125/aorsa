@@ -904,7 +904,7 @@
 
 
 
-      title = 'grad_parallel B'
+      title = 'grad parallel B'
       call ezconc(capr, y, gradprlb, ff, nnodex, nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity, iflag,1.)
       if (iflag .eq. 0) call boundary (capr, y, rho, ff, nnodex, &

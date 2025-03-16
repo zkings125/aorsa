@@ -2415,6 +2415,7 @@ c           calculate fields:
 
             a = (ps - psio) / (0.0 - psio)
             psi(i, j) = a
+!            print *,'psi eq',i,j,r,z,a,ps,psio
             if(a .gt. .999) a = .999
 
 
@@ -2560,7 +2561,7 @@ c
 
       do i = 1, nxeqd
          do j = 1, nyeqd
-           psi(i,j) = psilim - psi(i,j)
+            psi(i,j) = psilim - psi(i,j)
          end do
       end do
 

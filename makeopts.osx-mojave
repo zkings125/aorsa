@@ -1,6 +1,6 @@
 include compileropts.gnu
 WARNING_FLAGS+=-fallow-argument-mismatch
-FC = mpif90 -cpp -g -O0 #-O2   
+FC = mpif90 -cpp -O2   
 
 NETCDF_DIR := $(shell brew --prefix netcdf)
 NETCDFF_DIR := $(shell brew --prefix netcdf-fortran)
