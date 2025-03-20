@@ -193,7 +193,7 @@ c      if (upshift .eq. 0)   xkprl = nphi / rt
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c        if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0) then
+         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
@@ -201,12 +201,8 @@ c        if (abs(reson) .lt. 0.02)then
             dzetal(l) = 0.0
          end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
-     .                                           * gradprlb / bmod)
+     &                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
 
@@ -794,8 +790,8 @@ c      use zfun_hilbert
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c         if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0) then
+c        if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
@@ -803,12 +799,8 @@ c         if (abs(reson) .lt. 0.02)then
             dzetal(l) = 0.0
          end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
-     .                                           * gradprlb / bmod)
+     &                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
 
@@ -1088,8 +1080,8 @@ c      xkperp = sqrt(xkalp**2 + xkbet**2)
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c         if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0) then
+c        if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
@@ -1097,12 +1089,8 @@ c         if (abs(reson) .lt. 0.02)then
             dzetal(l) = 0.0
          end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
-     .                                           * gradprlb / bmod)
+     &                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
 
@@ -1674,21 +1662,17 @@ c      end if
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c         if (abs(reson) .lt. 0.02)then
-      !  if (rho .gt. 1.0) then
+c        if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-      !  else
-      !     zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-      !     dzetal(l) = 0.0
-      !  end if
+         else
+            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+            dzetal(l) = 0.0
+         end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
-     .                                           * gradprlb / bmod)
+     &                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
 
@@ -1711,26 +1695,25 @@ c         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
 
-         if(gammab(1) .gt. 1.0e-05)then
+         if(lmax>0 .and. gammab(1)>1.0e-05)then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
-     .         / (2. * gammab(1) * y)
+     &         / (2. * gammab(1) * y)
          endif
-
+      
          xkprl_eff = xkprl / fgam 
-
       end if
 
 
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
 
-         if(gammab(1) .gt. 1.0e-05)then
+         if(lmax>0 .and. gammab(1)>1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
-     .         / (2. * gammab(1) * y)
+     &         / (2. * gammab(1) * y)
          endif
 
          xkprl_eff = xkprl / fgam 
@@ -2288,21 +2271,17 @@ c      end if
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c         if (abs(reson) .lt. 0.02)then
-      !  if (rho .gt. 1.0) then
+c        if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-      !  else
-      !     zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-      !     dzetal(l) = 0.0
-      !  end if
+         else
+            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+            dzetal(l) = 0.0
+         end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
-     .                                           * gradprlb / bmod)
+     &                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
 
@@ -2886,21 +2865,17 @@ c      end if
          labs = abs(l)
          reson = (omgrf - l * real(omgc)) / omgrf
          reson = (omgrf - l * real(omgc)) / omgrf
-c         if (abs(reson) .lt. 0.02)then
-      !   if (rho .gt. 1.0) then
+c        if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-      !   else
-      !      zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-      !      dzetal(l) = 0.0
-      !   end if
+         else
+            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+            dzetal(l) = 0.0
+         end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
-     .                                           * gradprlb / bmod)
+     &                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
 
