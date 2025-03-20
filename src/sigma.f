@@ -29,7 +29,8 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-
+      use aorsa2din_mod,only: eqtype
+      
       implicit none
       
       complex dkwxx, dkwxy, dkwxz, 
@@ -671,6 +672,7 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
+      use aorsa2din_mod,only: eqtype
       
       implicit none
       
@@ -954,6 +956,7 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
+      use aorsa2din_mod,only: eqtype
       
       implicit none
       
@@ -1523,6 +1526,7 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
+      use aorsa2din_mod,only: eqtype
       
       implicit none
       
@@ -2112,6 +2116,7 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
+      use aorsa2din_mod,only: eqtype
       
       implicit none
       
@@ -2713,6 +2718,7 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
+      use aorsa2din_mod,only: eqtype
       
       implicit none
       
