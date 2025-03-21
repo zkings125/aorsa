@@ -13,5 +13,5 @@ NETCDF_INCLUDE_DIR = ${NETCDF_DIR}/include
 LIBS += -L $(NETCDF_DIR) -lnetcdff -lnetcdf
 INCLUDE_DIRS +=  -I ${NETCDF_INCLUDE_DIR}
 
-F90FLAGS += -cpp -O2 -std=f2003 -fno-align-commons
+F90FLAGS += -cpp -O2 -std=f2008 -fno-align-commons
 

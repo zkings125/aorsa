@@ -1493,7 +1493,7 @@ c           write(6, 1314) i, j, psix, psilim_
 *           Set extint parameters
 *           ---------------------
             
-            h0 = 1.0e-03
+            h0 = 1.0e-04
             nmax = 2
       
             mmax = 6
@@ -1623,7 +1623,7 @@ c     &            zprimex, bratio_phi, icell, jcell, fcount
 
 
 c               h0 = twopi / 720.
-c               h0 = twopi / 360.
+                h0 = twopi / 360.
                 
                 go to 200
 
@@ -1921,10 +1921,11 @@ c     &                i_box
 *             -----------------------------------------------
               if(n_phi .ge. 2)then
                  delta_b = (modb_x(n_phi) - modb_x(n_phi -1))
+                 write(6,*) 'extint call 1558c ',delta_b, 
+     &                   i_stop,delta_l,h0
                  if (delta_b .ge. 1.0e-05 .and. i_stop .eq. 0)i_stop = 1
                  if (delta_b .lt. -1.0e-05 .and. i_stop .eq. 1)go to 201
               end if
-              write(6,*) 'extint call 1558c ',phi,h0
            end do       ! end of n_phi loop along orbit !
 *          -----------------------
 *          End of field line trace
@@ -2012,7 +2013,7 @@ c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
            
            i_sav = i
            j_sav = j
-                   
+           print *,'dl ',i,j,dldb_tot12(i,j)        
            end if  !endif for psix .le. psilim_    
 
          end do  ! end do for y big loop
@@ -2036,7 +2037,7 @@ c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
 *     -----------------------------
       call flux_to_rz(nnodex, nnodey, profile_in, 
      &   profile_out, rho_in, nrho, rho_ij) 
-      write(*,*) 'check pt 1'
+      write(*,*) 'check pt 1',profile_out
       dldb_tot12(1:nnodex, 1:nnodey) = profile_out 
                       
       call polavg(dldb_tot12, dldbavg, rho, nxmx, nymx, nrhomax,
@@ -4581,8 +4582,8 @@ c           write(6, 1314) i, j, psix, psilim_
 
                delta_x = xprimex - xprime_prev
                delta_y = yprimex - yprime_prev
-               delta_phi = 0. !phi - phi_prev
-               delta_z = 0. !caprx * delta_phi
+               delta_phi = phi - phi_prev !these two set to zero for dipole?
+               delta_z = caprx * delta_phi
                
                delta_l = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
                length = length + delta_l
@@ -5053,8 +5054,9 @@ c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
 *     -----------------------------         
       call flux_to_rz(nnodex, nnodey, profile_in, 
      &   profile_out, rho_in, nrho, rho_ij) 
-          
-      dldb_tot12(1:nnodex, 1:nnodey) = profile_out 
+      print *, 'profile_out', profile_out
+
+      dldb_tot12(1:nnodex, 1:nnodey) = profile_out(1:nnodex, 1:nnodey)
                       
       call polavg(dldb_tot12, dldbavg, rho, nxmx, nymx, nrhomax,
      &   nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
