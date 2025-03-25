@@ -29,6 +29,7 @@
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
+      use aorsa2din_mod, only: eqtype
 
       implicit none
       
@@ -193,7 +194,7 @@ c      if (upshift .eq. 0)   xkprl = nphi / rt
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c        if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0) then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
@@ -201,10 +202,6 @@ c        if (abs(reson) .lt. 0.02)then
             dzetal(l) = 0.0
          end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
      .                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
@@ -666,6 +663,7 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
+      use aorsa2din_mod, only: eqtype
       
       implicit none
       
@@ -786,17 +784,13 @@ c      use zfun_hilbert
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c         if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0) then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
             zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
             dzetal(l) = 0.0
          end if
-         
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
 
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
      .                                           * gradprlb / bmod)
@@ -944,7 +938,8 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-      
+      use aorsa2din_mod, only: eqtype
+
       implicit none
       
       real, dimension(:,:), allocatable :: DFDUPER0, DFDUPAR0
@@ -1071,18 +1066,14 @@ c      xkperp = sqrt(xkalp**2 + xkbet**2)
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c         if (abs(reson) .lt. 0.02)then
-      !   if (rho .gt. 1.0) then
+         if (rho .gt. 1.0 .or. eqtype/='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-      !   else
-      !      zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-      !      dzetal(l) = 0.0
-      !   end if
+         else
+            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+            dzetal(l) = 0.0
+         end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
      .                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
@@ -1507,6 +1498,7 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
+      use aorsa2din_mod, only: eqtype
 
       implicit none
       
@@ -1647,18 +1639,14 @@ c      end if
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c         if (abs(reson) .lt. 0.02)then
-      !  if (rho .gt. 1.0) then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-      !  else
-      !     zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-      !     dzetal(l) = 0.0
-      !  end if
+         else
+            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+            dzetal(l) = 0.0
+         end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
      .                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
@@ -2102,7 +2090,8 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-      
+      use aorsa2din_mod, only: eqtype      
+
       implicit none
       
       integer :: ieer ! fft error flag     
@@ -2262,20 +2251,17 @@ c      end if
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c         if (abs(reson) .lt. 0.02)then
-      !  if (rho .gt. 1.0) then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-      !  else
-      !     zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-      !     dzetal(l) = 0.0
-      !  end if
+         else
+            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+            dzetal(l) = 0.0
+         end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
-     .                                           * gradprlb / bmod)
+     .       * gradprlb / bmod)
+         
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
 
@@ -2706,7 +2692,8 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-      
+      use aorsa2din_mod, only: eqtype      
+
       implicit none
       
       integer :: ieer ! fft error flag
@@ -2859,20 +2846,16 @@ c      end if
 
          reson = (omgrf - l * real(omgc)) / omgrf
 c         if (abs(reson) .lt. 0.02)then
-      !   if (rho .gt. 1.0) then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-      !   else
-      !      zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
-      !      dzetal(l) = 0.0
-      !   end if
+         else
+            zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
+            dzetal(l) = 0.0
+         end if
          
-c        zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
-c         dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
-
-
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
-     .                                           * gradprlb / bmod)
+     .        * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
 
 
@@ -3259,9 +3242,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
 c
 c***************************************************************************
 c
-
-
-
 
       subroutine cql3d_dist(nupar, nuper, n_psi,
      .                       n_psi_dim, rho_a, rho,

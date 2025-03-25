@@ -1452,17 +1452,13 @@ c         write(18, 310) ((rho_tor2d(i, j), i = 1,nnodex),j = 1,nnodey)
      
 
 c      do i = 2, nnodex - 1
-        do i = i0, nnodex - 1
+      do i = i0, nnodex - 1
       
 c        do j = 1, nnodey - 1
-          do j = j0, j0
-
+         do j = j0, j0
 
             capr_x0 = capr(i) + dx / 2.0
             capz_x0 = y(j) + dy / 2.0
-!            if (myid==0) then
-!               write(*,*) 'eq setup, field lines', i,capr_x0,capz_x0
-!            end if
             x_extint = capr_x0 - rt
             y_extint = capz_x0
 
@@ -1479,8 +1475,6 @@ c        do j = 1, nnodey - 1
             
             if(psix .le. psilim_)then
             
-c           write(6, 1314) i, j, psix, psilim_
-
             i_psi = 1
          
         
@@ -1557,7 +1551,7 @@ c           write(6, 1314) i, j, psix, psilim_
                if(ncell .eq. 0 .and. n_phi .ne. 1)nphi_enter = n_phi - 1
 
                call extint(nmax, phi, y_phi, f, h0, mmax, error)
-               !write(*,*) 'extint 1558b',phi,h0
+               
                ncell = ncell + 1
 
                xprimex = y_phi(1)
@@ -1610,21 +1604,15 @@ c           write(6, 1314) i, j, psix, psilim_
 
                end if
 
-
-c               write(6, 1213)n_phi, ncell, phin_x(n_phi),
-c     &            capr_x(n_phi), len_x(n_phi),
-c     &            zprimex, bratio_phi, icell, jcell, fcount
-
-c               write(115,1213)n_phi, ncell, phin_x(n_phi),
-c     &            capr_x(n_phi), len_x(n_phi),
-c     &            zprimex, bratio_phi, icell, jcell, fcount
-
-
-
+#ifdef DEBUG
+               write(6, 1213)n_phi, ncell, phin_x(n_phi),
+     &            capr_x(n_phi), len_x(n_phi),
+     &            yprimex, bratio_phi, icell, jcell, fcount
+#endif
 c               h0 = twopi / 720.
-c               h0 = twopi / 360.
+               h0 = twopi / 360.
                 
-                go to 200
+               go to 200
 
 *              ---------------------------------------------------------
 *              If cell changes in x, redo the step to land on x boundary
@@ -1696,25 +1684,9 @@ c               h0 = twopi / 360.
                  end if
 
 
+                 ncell = 0
 
-c                  write(6, 1213)n_phi, ncell, phin_x(n_phi),
-c     &               capr_x(n_phi), len_x(n_phi),
-c     &               zprimex, bratio_phi, icell, jcell, fcount
-
-c                  write(115,1213)n_phi, ncell, phin_x(n_phi),
-c     &               capr_x(n_phi), len_x(n_phi),
-c     &               zprimex, bratio_phi, icell, jcell, fcount
-
-                  ncell = 0
-
-                  nphi_exit = n_phi
-
-c                  write(6, *)"nphi_enter = ", nphi_enter
-c                  write(6, *)"nphi_exit = ",  nphi_exit
-                  
-c                 write(115, *)"nphi_enter = ", nphi_enter
-c                  write(115, *)"nphi_exit = ",  nphi_exit
-
+                 nphi_exit = n_phi
 
 *                 ------------------------
 *                 Analytic dtau integral:
@@ -1744,28 +1716,8 @@ c                  write(115, *)"nphi_exit = ",  nphi_exit
                   
                   dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_enter)
                   dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_exit)
-                  
-                  
-c                  do nphii = nphi_enter, nphi_exit
-c                     write(6, 1312)nphii, dl_vprl(nphii)
-c                  end do                 
-
-
                   dtau_tot_sum = dtau_tot_sum + dtau_sum
                   
-
-c                  write(6, 1414) n_theta_check,
-c     &                theta_(n_theta_check, i_psi),
-c     &                dtau_sum, dtau_tot_sum,
-c     &                dldb_sum, dldb_tot_sum, 
-c     &                i_box
-
-c                  write(115, 1414) n_theta_check,
-c     &                theta_(n_theta_check, i_psi),
-c     &                dtau_sum, dtau_tot_sum,
-c     &                dldb_sum, dldb_tot_sum, 
-c     &                i_box
- 
                   i_box = i_box + 1
 
                   go to 200
@@ -1819,7 +1771,9 @@ c     &                i_box
                   dlen_x(n_phi) = delta_l
                   len_x (n_phi) = length
 
-
+#ifdef DEBUG
+         print *,'deltab(1)', i_stop,delta_b,capr_x(n_phi),capz_x(n_phi)
+#endif
 *                -----------------------
 *                Numerical dtau integral
 *                -----------------------
@@ -1835,27 +1789,11 @@ c     &                i_box
                        vprl = sqrt(argi)
                        dl_vprl(n_phi) = delta_l / vprl
                     end if
-
                   end if
 
 
-c                  write(6, 1213)n_phi, ncell, phin_x(n_phi),
-c     &               capr_x(n_phi), len_x(n_phi),
-c     &               zprimex, bratio_phi, icell, jcell, fcount
-
-c                  write(115, 1213)n_phi, ncell, phin_x(n_phi),
-c     &               capr_x(n_phi), len_x(n_phi),
-c     &               zprimex, bratio_phi, icell, jcell, fcount
-
                   ncell = 0
-
                   nphi_exit = n_phi
-
-c                  write(6, *)"nphi_enter = ", nphi_enter
-c                  write(6, *)"nphi_exit = ",  nphi_exit
-                  
-c                  write(115, *)"nphi_enter = ", nphi_enter
-c                  write(115, *)"nphi_exit = ",  nphi_exit
 
 *                 ----------------------
 *                 Analytic dtau integral:
@@ -1885,24 +1823,9 @@ c                  write(115, *)"nphi_exit = ",  nphi_exit
 
                   dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_enter)
                   dtau_sum = dtau_sum + 0.5 * dl_vprl(nphi_exit)
-                  
-
                   dtau_tot_sum = dtau_tot_sum + dtau_sum
                   
-
-c                  write(6, 1414) n_theta_check,
-c     &                theta_(n_theta_check, i_psi),
-c     &                dtau_sum, dtau_tot_sum,
-c     &                dldb_sum, dldb_tot_sum, 
-c     &                i_box
-
-c                  write(115, 1414) n_theta_check,
-c     &                theta_(n_theta_check, i_psi),
-c     &                dtau_sum, dtau_tot_sum,
-c     &                dldb_sum, dldb_tot_sum, 
-c     &                i_box
-
-                   i_box = i_box + 1
+                  i_box = i_box + 1
 
                   go to 200
 
@@ -1917,6 +1840,9 @@ c     &                i_box
               if(n_phi .ge. 2)then
                  delta_b = (modb_x(n_phi) - modb_x(n_phi -1))
                  if (delta_b .ge. 1.0e-05 .and. i_stop .eq. 0)i_stop = 1
+#ifdef DEBUG
+            print *,'deltab', i_stop,delta_b,capr_x(n_phi),capz_x(n_phi)
+#endif
                  if (delta_b .lt. -1.0e-05 .and. i_stop .eq. 1)go to 201
               end if
            end do       ! end of n_phi loop along orbit !
@@ -2031,15 +1957,15 @@ c             tau_bounce(i, j, n_theta) = dtau_tot12
 *     -----------------------------
       call flux_to_rz(nnodex, nnodey, profile_in, 
      &   profile_out, rho_in, nrho, rho_ij) 
-      write(*,*) 'check pt 1'
+
       dldb_tot12(1:nnodex, 1:nnodey) = profile_out 
                       
       call polavg(dldb_tot12, dldbavg, rho, nxmx, nymx, nrhomax,
      &   nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
-      write(*,*) 'check pt 2'
+
       call volume_xy(rho, nxmx, nymx, nrhomax,
      &   nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol_xy)
-      write(*,*) 'check pt 3'     
+
 
      
 9318  format(a128)
@@ -2113,7 +2039,6 @@ c             tau_bounce(i, j, n_theta) = dtau_tot12
       write(138, 310) ((dldb_tot12(i, j), i = 1, nnodex), 
      &                                   j = 1, nnodey)
       write(138, 310) (dldbavg(n), n = 1, nnoderho)
-      
 
       write(138, 310) ((bx(i, j), i = 1, nnodex), j = 1, nnodey)
       write(138, 310) ((by(i, j), i = 1, nnodex), j = 1, nnodey)
@@ -2415,7 +2340,7 @@ c           calculate fields:
 
             a = (ps - psio) / (0.0 - psio)
             psi(i, j) = a
-!            print *,'psi eq',i,j,r,z,a,ps,psio
+
             if(a .gt. .999) a = .999
 
 
@@ -2941,7 +2866,7 @@ c
       if(myid .eq. 0)then 
          write(15, *)       
          write(15, *) "B_axis (eqdsk) = ", beqd
-         write(15, *) "curren (eqdsk) = ", current
+         write(15, *) "current(eqdsk) = ", current
          write(15, *) "psimag (eqdsk) = ", psimag
          write(15, *) "psilim (eqdsk) = ", psilim   
                          
@@ -4530,7 +4455,9 @@ c           write(6, 1314) i, j, psix, psilim_
             
             call f(phi, y_phi, dy_phi)
             modb_init = modb
-
+            dxdphi = dy_phi(1)
+            dydphi = dy_phi(2)
+               
             do n_theta = 1, n_theta_(i_psi)
                dtau_tot(n_theta) = 0.0
                sinth2_init(n_theta, i_psi)=sin(theta_(n_theta,i_psi))**2
@@ -4574,8 +4501,8 @@ c           write(6, 1314) i, j, psix, psilim_
 
                delta_x = xprimex - xprime_prev
                delta_y = yprimex - yprime_prev
-               delta_phi = 0. !phi - phi_prev
-               delta_z = 0. !caprx * delta_phi
+               delta_phi = phi - phi_prev !JCW
+               delta_z = caprx * delta_phi !JCW
                
                delta_l = sqrt(delta_x**2 + delta_y**2 + delta_z**2)
                length = length + delta_l
@@ -4628,7 +4555,7 @@ c     &            zprimex, bratio_phi, icell, jcell, fcount
 
 
 c               h0 = twopi / 720.
-C                h0 = twopi / 360.
+                h0 = twopi / 360.
                 
                 go to 200
 
@@ -5036,8 +4963,8 @@ c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
       profile_in = dldb_tot12(i0:i_max, j0)
       rho_in =            rho(i0:i_max, j0)
       
-      if(myid .eq. 0)print*, 'rho_in  ',rho_in
-      if(myid .eq. 0)print*, 'profile_in  ',profile_in
+!      if(myid .eq. 0)print*, 'rho_in  ',rho_in
+!      if(myid .eq. 0)print*, 'profile_in  ',profile_in
 
 *     -----------------------------
 *     deposit dldb on 2D flux grid:

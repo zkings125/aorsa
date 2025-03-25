@@ -1172,7 +1172,9 @@ c
       CALL PGSWIN (caprmin, caprmax, xjymin, xjymax)
       CALL PGSCI(nblack)
       call pgsls(1)
+      call pgline(nnodex, capr, xjxmid)
       call pgline(nnodex, capr, xjymid)
+      call pgline(nnodex, capr, xjzmid)
 
       CALL PGSCI(nblack)
       call pgsls(1)
@@ -1196,7 +1198,7 @@ c     &    nnodex, nxmx, xnmin, xnmax, rmin_zoom, rmax_zoom)
 
       call ezzoom6(title, titll, titlr, titlb, capr, xnmid,
      &    xktemid, xktimid, xjymid, fmid4, fmid5,
-     &    nnodex, nxmx, rmin_zoom, rmax_zoom)
+     &    nnodex, nxmx, rmin_zoom, rmax_zoom) !jcw other J components?
 
 *     -----------------------
 *     plot kphi = nphi / R(i) xxxx
@@ -4848,7 +4850,7 @@ c
          fmidim(i) = aimag(eplus_flux_plot(i,jmid))
       end do
 
-      title = 'Eplus flux plot'
+      title = 'E_{+} flux plot'
       titll = 'Re Eplus (V/m)'
       titlr = 'Im Eplus (V/m)'
       titlb = 'R (m)'
@@ -4865,7 +4867,7 @@ c
          fmidim(i) = aimag(eminus_flux_plot(i,jmid))
       end do
 
-      title = 'E_{-] flux plot'
+      title = 'E_{--} flux plot'
       titll = 'Re Eminus (V/m)'
       titlr = 'Im Eminus (V/m)'
       titlb = 'R (m)'
@@ -4962,7 +4964,7 @@ c      end do
          end do
       end do
 
-      title = 'E_{-} flux'
+      title = 'E_{--} flux'
       titx   = 'rho'
       tity = 'theta'
       call ezconc(rhon, thetam, freal, ff, nnoderho, mnodetheta, numb,
@@ -5459,33 +5461,11 @@ c        flevel(i) = fmin + (i - 0.5) * df / 1000.
          flevel(i) = fmin + (i - 0.5) * df
       end do
 
-      if(nlevel.eq.1)flevel(1)=1.0e-03
-
-      if(nlevel.eq.4)then
-         flevel(1)=1.0
-         flevel(2)=2.0
-         flevel(3)=3.0
-         flevel(4)=4.0
-      endif
-
-
-      if(nlevel.eq.15)then
-         flevel(1)=1.0
-         flevel(2)=2.0
-         flevel(3)=3.0
-         flevel(4)=4.0
-         flevel(5)=5.0
-         flevel(6)=6.0
-         flevel(7)=7.0
-         flevel(8)=8.0
-         flevel(9)=9.0
-         flevel(10)=10.0
-         flevel(11)=11.0
-         flevel(12)=12.0
-         flevel(13)=13.0
-         flevel(14)=14.0
-         flevel(15)=15.0
-      endif
+      if(nlevel==1) then
+         flevel(1)=1.0e-03
+      else if (nlevel==4 .or. nlevel==15) then
+         flevel(1:nlevel) = (/(i*1.0, i=1,nlevel)/)
+      end if
 
 c Split contours into two parts, f > 0, and f < 0.
 c Dashed contours will be at levels 'ilevlt' through 'ilevlt+nlevlt'.
@@ -5525,8 +5505,8 @@ c     ! call pgsci(nblack)
 
 c Call plotter once for f < 0 (dashed), once for f > 0 (solid lines).
 
-      if(nlevlt .lt. 0) then
-         call pgsci(nmagenta)
+      if(nlevlt .gt. 0) then
+         call pgsci(nred)
          call pgcont(f, nrmax, nthmax, 1, nr, 1, nth, flevel(ilevlt),
      &        nlevlt, tr)
       endif
@@ -5799,14 +5779,11 @@ c--set up contour levels
 
 #ifdef DEBUG
       write(*,*) 'title: ', title
-#endif
       write(6, *)"fmax = ", fmax, "   fmin = ", fmin
-      write(15,*)"fmax = ", fmax, "   fmin = ", fmin
+#endif
 
       iflag = 0
        if(fmax .eq. 0.0 .and. fmin .eq. 0.0)then
-c         write(6, *)"fmax = ", fmax
-c         write(6, *)"fmin = ", fmin
          iflag = 1
          return
       end if

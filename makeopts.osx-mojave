@@ -19,4 +19,5 @@ LIBS += -L $(PGPLOT_DIR)/lib -lpgplot -lgiza
 
 LIBS +=  -L /opt/X11/lib -lX11
 
-DEFS += -DGIZA -DDEBUG
+DEFS += -DGIZA 
+#-DDEBUG

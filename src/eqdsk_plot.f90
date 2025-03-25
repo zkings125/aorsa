@@ -794,7 +794,7 @@
          nxmx, nymx, nlevmax, title, titx, tity,1.)
 
 
-      title = 'capr_bpol_mid2 surfaces'
+      title = 'capr bpol_{mid2} surfaces'
       call ezconc(capr, y, capr_bpol_mid2, ff, nnodex, nnodey, numb, &
          nxmx, nymx, nlevmax, title, titx, tity, iflag,1.)
       if (iflag .eq. 0) call boundary(capr, y, rho, ff, nnodex, &
@@ -849,8 +849,8 @@
           nnoderho_half, nrhomax)
 
 
-      title= 'Flux average capr_bpol'
-      titll= 'capr_bpol (mT)'
+      title= 'Flux average capr*bpol'
+      titll= 'capr*bpol (mT)'
       titlr='       '
       call ezplot1(title, titll, titlr, rhon_half, capr_bpol_midavg, &
            nnoderho_half, nrhomax)

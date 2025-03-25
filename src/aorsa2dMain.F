@@ -1464,7 +1464,7 @@ c      jequat  = nnodey / 2
 
       xnurf = freqcy
 
-      omgrf = 2.0 * pi * xnurf
+      omgrf = twopi * xnurf
       omgrfc = omgrf*(1.+zi*xnuome)
 
 
@@ -2071,7 +2071,7 @@ c----------------------------------------------------
                   theta0(i,j) = atan2(y(j), denom)
                   if(theta0(i,j) .ge. 0.0) theta(i,j) = theta0(i,j)
                   if(theta0(i,j) .lt. 0.0) theta(i,j) =
-     1                                       theta0(i,j) + 2.0 * pi
+     1                                       theta0(i,j) + twopi
                end if
 
 
@@ -2971,7 +2971,7 @@ c      write(6, 1312) jzoom2
                theta0(i,j) = atan2(y(j), x(i))
                if(theta0(i,j) .ge. 0.0) theta(i,j) = theta0(i,j)
                if(theta0(i,j) .lt. 0.0) theta(i,j) =
-     1                                       theta0(i,j) + 2.0 * pi
+     1                                       theta0(i,j) + twopi
             end if
          end do
       end do
@@ -3008,7 +3008,7 @@ c      rhomax = 1.0
 *     Define theta mesh: thetam(m)
 *---------------------------------
 c--   thetam: 0 to 2pi
-      thetamax = 2.0 * pi
+      thetamax = twopi
       dtheta = thetamax / (mnodetheta - 1)
       do m = 1, mnodetheta
          thetam(m) = (m-1) * dtheta
@@ -3031,7 +3031,6 @@ c--   thetam: 0 to 2pi
 
             capr_flux(n,m) = capr_out
             capz_flux(n,m) = capz_out
-c           if(myid .eq. 0)write(6,*)n, m, capr_flux(n,m), xj
          end do
       end do
 
@@ -3073,9 +3072,6 @@ c--note curden is in Amps per meter of toroidal length (2.*pi*rt).
 
       rmax = (caprmax - caprmin) / 2.0
 
-      if(myid .eq. 0) print *, 'caprmax', caprmax, caprmin, rmax
-
-
 
       do n = 1, nnoderho
          rn(n) = rhon(n) * rmax
@@ -3085,47 +3081,6 @@ c         if (myid .eq. 0)write(15, 1312)n, rn(n), rhon(n), dn(n)
       end do
 
 
-      ! The following find the point within drho of 0.
-      ! May fail in a coarse mesh. drho for uniform mesh as well
-      ! Could be replaced with minloc call
-      loopi1: do i = 1, nnodex
-         do j = 1, nnodey
-            n = int(rho(i,j) / drho) + 1
-            if (n .eq. 1) then
-               i0 = i
-               j0 = j
-               exit loopi1
-            end if
-         end do 
-      end do loopi1
-
-      if(i0 .eq. 0 .and. j0 .eq. 0) then
-         loopi2: do i = 1, nnodex
-            do j = 1, nnodey
-               n = int(rho(i,j) / drho) + 1
-               if (n .eq. 2) then
-                  i0 = i
-                  j0 = j
-                  exit loopi2
-               end if
-            end do
-         end do loopi2
-      end if
-      
-      if(i0 .eq. 0 .and. j0 .eq. 0) then
-         loopi3: do i = 1, nnodex               
-            do j = 1, nnodey         
-               n = int(rho(i,j) / drho) + 1
-               if (n .eq. 3) then
-                  i0 = i
-                  j0 = j
-                  exit loopi3
-               end if
-            end do
-         end do loopi3
-      end if
-!      print *,'minloc ',i0,j0,
-!     &  minloc(int(rho(1:nnodex,1:nnodey) / drho))
       loc0=minloc(int(rho(1:nnodex,1:nnodey) / drho))
       i0=loc0(1) ; j0=loc0(2)
 
@@ -3134,7 +3089,6 @@ c         if (myid .eq. 0)write(15, 1312)n, rn(n), rhon(n), dn(n)
       do n = 1, nnoderho - 1
          rh(n) = (rn(n) + rn(n+1)) / 2.0
          dh(n) = (dn(n) + dn(n+1)) / 2.0
-c         if (myid .eq. 0)write(6, 1312)n, rh(n), dh(n)
       end do
       rh(nnoderho) = 0.0
       dh(nnoderho) = 0.0
@@ -3279,7 +3233,7 @@ c      end if
       theta_antr = theta_ant / 180. * pi
 
       dpsiant = dpsiant0
-      dthetant = dthetant0 / 360. * 2.0 * pi
+      dthetant = dthetant0 / 360. * twopi
       yant_max = antlen / 2.0
 
 
@@ -3299,7 +3253,7 @@ c      end if
             gaussantth = exp(-delta_theta**2 / dthetant**2)
 
 *           ------------------------
-*           Curved antenna (default)
+*           Curved antenna (default) psi,theta
 *           ------------------------
             if(curved_ant .eqv. .true.) then
                gausspsi = exp(-( psi(i,j) - psiant)**2 / dpsiant**2)
@@ -3309,7 +3263,7 @@ c      end if
 *           Straight antenna
 *           -----------------
             if(curved_ant .neqv. .true.) then
-               gausspsi   = exp(-(capr(i) -   rant)**2 / dpsiant**2)
+               gausspsi   = exp(-(capr(i) -   rant)**2 / dpisant**2)
             end if
 
             shapey = 0.0
@@ -3338,7 +3292,7 @@ c                  antlc = pi / (xk0 * antlen)
 
 
                end if
-               if(curved_ant .eqv. .true.) shapey=gaussantth
+!               if(curved_ant .eqv. .true.) shapey=gaussantth !allow ant on limited theta !jcw fix
 
                Ix = - dpsidy / gradpsi * cos_antang
                Iy =   dpsidx / gradpsi * cos_antang
@@ -4228,7 +4182,6 @@ c                 xkti2(i,j) = xkti3(i,j)
          end do
 
 
-         write(*,*) 'i0, j0',i0,j0
          xn00 = xnea(i0, j0)
          xn10 = xn1a(i0, j0)
          xn20 = xn2a(i0, j0)
@@ -4351,7 +4304,7 @@ c     write (6, *) "xmi1 = ", xmi1
          do j = 1, nnodey
             n = int(rho(i,j) / drho) + 1
             if(n .le. nnoderho)then
-               dvol(n)  =  dvol(n) + dx * dy * 2.0 * pi * capr(i)
+               dvol(n)  =  dvol(n) + dx * dy * twopi * capr(i)
                darea(n) = darea(n) + dx * dy * capr(i) / rt
             end if
          end do
@@ -4586,7 +4539,7 @@ c            acold(i,j) = xnphi**2 - capk_perp
             ccold(i,j) = right - xnphi**2
 
             xkperp_cold2(i,j) = bcold(i,j) * ccold(i,j) / acold(i,j)
-            xkperp_cold(i,j) = csqrt(xkperp_cold2(i,j))
+            xkperp_cold(i,j) = sqrt(xkperp_cold2(i,j))
             if (j .eq. jmid) kimag_cold(i) = aimag(xkperp_cold(i,j))
 
          end do
@@ -4762,24 +4715,24 @@ c     &         xnea(i,j), re_acold
       end do
 
 
-      if(myid .eq. 0)write(6, *) "      n       xkxsav"
+      if(myid .eq. 0)write(6, *) "      n       xkxsav",xmax
       do n = nkx1, nkx2
-         xkxsav(n) = 2.0 * pi * n / xmax
+         xkxsav(n) = twopi * n / xmax
          if(myid .eq. 0)write(6, *) n,  xkxsav(n)
       end do
-
+ 
 
 
       if(myid .eq. 0)write(6, *) "      m       xkysav"
       do m = nky1, nky2
-         xkysav(m) = 2.0 * pi * m / ymax
+         xkysav(m) = twopi * m / ymax
          if(myid .eq. 0)write(6, *) m,  xkysav(m)
       end do
 
-      mdisp = xkydisp * ymax / (2.0 * pi)
+      mdisp = xkydisp * ymax / (twopi)
 
-      n_ono = xkx_ono * xmax / (2.0 * pi)
-      m_ono = xky_ono * ymax / (2.0 * pi)
+      n_ono = xkx_ono * xmax / (twopi)
+      m_ono = xky_ono * ymax / (twopi)
 
 
 
@@ -5451,7 +5404,7 @@ c           call flush
 
       end if
 
-      psiorb = psilim * 10.0
+      psiorb = psilim * 10.0 !magic number JCW
 
 *     ----------------------------------------------------------------
 *     Load x, y and z equations for spatial point (i,j) and mode number (n,m)
@@ -5482,7 +5435,7 @@ c           call flush
 c--            lb(nl):  0 to lbmax
 c--            lbprime(nl): -lbmax / 2 to lbmax / 2
 
-                lbmax = 2.0 * pi * rt * qsafety(i, j)
+                lbmax = twopi * rt * qsafety(i, j)
 
 
                dlb = lbmax / nnodelb
@@ -5493,7 +5446,7 @@ c--            lbprime(nl): -lbmax / 2 to lbmax / 2
                end do
 
                do nkl = nkl1, nkl2
-                  xklsav(nkl) = 2.0 * pi * nkl / lbmax
+                  xklsav(nkl) = twopi * nkl / lbmax
                   if (nkl .eq. 0) xklsav(nkl) = 1.0e-05
                end do
 
@@ -6585,7 +6538,7 @@ c               end if
 *                 metal boundary edge region:
 *                 --------------------------
                   if(     psi(i,j) .gt. psilim .and. nboundary .eq. 1
-     &               .or. psi(i,j) .lt. 0.6    .and. nboundary .eq. 1
+     &               .or. psi(i,j) .lt. psifcf .and. nboundary .eq. 1
      &               .or. nboundary .eq. 0 .and. i .eq. 1
      &               .or. nboundary .eq. 0 .and. i .eq. nnodex
      &               .or. nboundary .eq. 0 .and. j .eq. 1
@@ -7160,8 +7113,8 @@ c     &   myid, nproc, icontxt)
 
 
       do i = 1, nnodex
-         kimag_slow(i) = aimag(csqrt(xkperp2_slow(i,jmid)))
-         kimag_fast(i) = aimag(csqrt(xkperp2_fast(i,jmid)))
+         kimag_slow(i) = aimag(sqrt(xkperp2_slow(i,jmid)))
+         kimag_fast(i) = aimag(sqrt(xkperp2_fast(i,jmid)))
       end do
 
       call dgrate(xprime, kimag_slow, 1, nnodex, ans, nxmx)
@@ -8715,7 +8668,7 @@ c                   rhohaty(i,j) = drhody / gradrho
      1                         conjg(ex(i,j)) * bzwave(i,j)
      1                       - conjg(ez(i,j)) * bxwave(i,j)  )
 
-c                  dspxdx(i) = 1. / (2. * xmu0 * omgrf) * imag(
+c                  dspxdx(i) = 1. / (2. * xmu0 * omgrf) * aimag(
 c    1                conjg(deydx(i)) * (deydx(i) - zi * xky * ex(i))
 c    1              + conjg(ey(i)) * (d2eydx(i) - zi * xky * dexdx(i))
 c    1              + conjg(dezdx(i)) * (dezdx(i) - zi * xkz * ex(i))
@@ -8896,12 +8849,12 @@ c                 c_ehst = 1.0
 *     ------------------
 *     Normalize to jdote:
 *     ------------------
-      if(norm .eq. 1)powtot = 2.0 * pi * rt * ptot
+      if(norm .eq. 1)powtot = twopi * rt * ptot
 
 *     -----------------
 *     Normalize to wdot:
 *     -----------------
-      if(norm .eq. 2)powtot = 2.0 * pi * rt * ptot_wdot
+      if(norm .eq. 2)powtot = twopi * rt * ptot_wdot
 
 *     --------------------
 *     Normalize to wdot_ql:
@@ -8959,7 +8912,7 @@ c                 c_ehst = 1.0
       xjx = xjx * sqrt(pscale)
       xjy = xjy * sqrt(pscale)
       xjz = xjz * sqrt(pscale)
-      xjt = sqrt(xjx**2+xjy**2+xjz**2 )
+      xjt = sqrt(xjx**2+xjy**2+xjz**2)
 
       do n = nkx1, nkx2
          do m = nky1, nky2
@@ -9708,7 +9661,7 @@ c           if(nnode_local .le. 0)xjprl(i,j) = redotj_ehst(i,j)
       call sgrator(x, y, redotjt, 1, nnodex, 1, nnodey, pedotjt,
      &   capr, rt, nxmx, nymx)
 
-      call sgrator1(x, y, xjt, 1, nnodex, 1, nnodey, i_ant,
+      call sgrator1(x, y, xjt, 1, nnodex, 1, nnodey, i_ant, !xjy
      &   capr, rt, nxmx, nymx, j_cur_max)
 
       call sgrator(x, y, xjprl, 1, nnodex, 1, nnodey, xjtot,
@@ -10496,7 +10449,7 @@ c         do i = 1, nnodex
 c            do j = 1, nnodey
 c               n = int(rho(i,j) / drho) + 1
 c               if(n .lt. nnoderho)then
-c                  dvol(n)  =  dvol(n) + dx * dy * 2.0 * pi * capr(i)
+c                  dvol(n)  =  dvol(n) + dx * dy * twopi * capr(i)
 c                 darea(n) = darea(n) + dx * dy * capr(i) / rt
 c               end if
 c            end do
@@ -10879,7 +10832,7 @@ c         end do
          write(38, 310) ((ftheta0(i, j), i = 1, nnodex), j = 1, nnodey)
          write(38, 310) ((pressi(i,j), i = 1, nnodex), j = 1, nnodey)
          write(38, 310) ((dldb_tot12(i, j), i = 1, nnodex),
-     &                                      j = 1, nnodey)
+     &                                       j = 1, nnodey)
 
          write (38, 309) ndisti1, ndisti2, ndisti3
 
@@ -10914,7 +10867,6 @@ c         end do
          write(38, 310) ((dxxuyy(i,j), i = 1, nnodex), j = 1, nnodey)
          write(38, 310) ((dyyuzz(i,j), i = 1, nnodex), j = 1, nnodey)
          write(38, 310) ((gradprlb(i,j), i = 1, nnodex), j = 1, nnodey)
-
          write(38, 310) ((xkperp2_slow(i, j), i = 1, nnodex),
      &      j = 1, nnodey)
          write(38, 310) ((xkperp2_fast(i, j), i = 1, nnodex),
