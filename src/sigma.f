@@ -1,6 +1,6 @@
-c
-c***************************************************************************
-c
+!
+!***************************************************************************
+!
 
       subroutine dkw(i, j, n, m, rho, rho_a,
      .   gradprlb, bmod, bmod0,
@@ -267,14 +267,6 @@ c      if(ndist .eq. 0)then
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          dkwxx = 0.0
          dkwxy = 0.0
@@ -637,7 +629,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -796,15 +787,15 @@ c      use zfun_hilbert
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c        if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
+c         if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
             zetal(l) = (omgrf  - l * omgc) / (xkprl * alpha)
             dzetal(l) = 0.0
          end if
-         
+
          gammab(l) = abs(l * omgc / (2.0 * alpha * xkprl**2)
      &                                           * gradprlb / bmod)
          gamma_coll(l) = nu_coll / (akprl * alpha)
@@ -868,14 +859,6 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          delta_x = 0.0 
          delta_y = 0.0 
@@ -928,7 +911,6 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -964,8 +946,8 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-      use aorsa2din_mod,only: eqtype
-      
+      use aorsa2din_mod, only: eqtype
+
       implicit none
       
       real, dimension(:,:), allocatable :: DFDUPER0, DFDUPAR0
@@ -1091,8 +1073,8 @@ c      xkperp = sqrt(xkalp**2 + xkbet**2)
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c        if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
+c         if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype/='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
@@ -1165,14 +1147,6 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
          rgamma = real(gamma)
 
          call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-         if (.false.) then
-         if(rgamma .ge. 1.0e-08)
-     .      call besiexp(gamma, lmax, exil, exilp, lmaxdim, exilovergam)
-
-         if(rgamma .lt. 1.0e-08)
-     .      call bes_expand(gamma, lmax, exil, exilp, lmaxdim,
-     .                                                      exilovergam)
-         end if
 
          sig0 = 0.0
          sig1 = 0.0
@@ -1495,7 +1469,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -1529,7 +1502,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
      .   z0_table, z1_table, z2_table, zetai_table, dKdL_table, 
      .   dKdL_giv, nmax, mmax,  use_new_z2, ntable, mtable, sige3_new)
 
-     
 
 
 *     ---------------------------------------------------------
@@ -1538,8 +1510,8 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-      use aorsa2din_mod,only: eqtype
-      
+      use aorsa2din_mod, only: eqtype
+
       implicit none
       
       real, dimension(:,:), allocatable :: DFDUPER0, DFDUPAR0
@@ -1678,8 +1650,8 @@ c      end if
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c        if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
+c         if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
@@ -1710,30 +1682,29 @@ c         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
 
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
-
-         if(lmax>0) then
-         if (gammab(1)>1.0e-05)then
+         if (lmax >0) then
+         if(gammab(1) .gt. 1.0e-05)then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
-     &         / (2. * gammab(1) * y)
-         end if
-         end if
+     &           / (2. * gammab(1) * y)
+         endif   
+         endif
+         
          xkprl_eff = xkprl / fgam 
       end if
 
 
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
-
-         if(lmax>0) then
-         if (gammab(1)>1.0e-05)then
+         if (lmax >0) then
+         if(gammab(1) .gt. 1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
-     &         / (2. * gammab(1) * y)
-         end if
-         end if
+     &           / (2. * gammab(1) * y)
+         endif   
+         endif
 
          xkprl_eff = xkprl / fgam 
 
@@ -2089,7 +2060,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -2131,8 +2101,8 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-      use aorsa2din_mod,only: eqtype
-      
+      use aorsa2din_mod, only: eqtype      
+
       implicit none
       
       integer :: ieer ! fft error flag     
@@ -2291,8 +2261,8 @@ c      end if
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c        if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
+c         if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
@@ -2698,7 +2668,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -2737,8 +2706,8 @@ c
 *     No rotation is made.  Result is in the Stix frame.
 *     ---------------------------------------------------------
 c      use zfun_hilbert  
-      use aorsa2din_mod,only: eqtype
-      
+      use aorsa2din_mod, only: eqtype      
+
       implicit none
       
       integer :: ieer ! fft error flag
@@ -2890,8 +2859,8 @@ c      end if
          labs = abs(l)
 
          reson = (omgrf - l * real(omgc)) / omgrf
-c        if (abs(reson) .lt. 0.02)then
-         if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
+c         if (abs(reson) .lt. 0.02)then
+         if (rho .gt. 1.0 .or. eqtype /='tokamak') then
             zetal(l) = (omgrfc - l * omgc) / (xkprl * alpha)
             dzetal(l) = omgrf * xnuomg / (xkprl * alpha)
          else
@@ -3284,7 +3253,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
   102 format(2i10, 1p8e12.4)
   103 format(4i10, 1p8e12.4)
       end
@@ -3293,9 +3261,6 @@ c     .                           - uperp(ni) * dfdupar(ni, mi)
 c
 c***************************************************************************
 c
-
-
-
 
       subroutine cql3d_dist(nupar, nuper, n_psi,
      .                       n_psi_dim, rho_a, rho,
@@ -3431,7 +3396,6 @@ c     DLG: for the z slice on the magnetic axis (jmid)
 
 
 
-  100 format (1i10, 1p8e12.4)
   102 format (2i10)
       return
       end
@@ -3752,7 +3716,6 @@ c
   101 format(i10, 1p8e12.4)
  1314 format(4i10, 1p9e12.4)
  1312 format(1p9e12.4)
-  100 format('ier = ', i5, ' besic failed')
       end
 
 c
@@ -3782,30 +3745,25 @@ c
       exgam = exp(-gamma)
       gammod = cabs(gamma)
 
- !     if(gammod .le. 700.)then
-         nmax = lmax + 1
- !        call besic(gamma, nmax, b, ier)
-         call cbesi(gamma, 0.0, 2, nmax+1, b,nz, ier)
-        if(ier .ne. 0)write(6,100) ier
+      nmax = lmax + 1
+      call cbesi(gamma, 0.0, 2, nmax+1, b,nz, ier)
+      if(ier .ne. 0)write(6,100) ier
 
-         do l = 0, lmax
-            xil(l) = b(l+1)
-         end do
+      do l = 0, lmax
+         xil(l) = b(l+1)
+      end do
 
-         do l = 0, lmax
-           if(l .eq. 0) xilp(0) = xil(1)
-           if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma * xil(l)  !derivative by recurrence
-           expbes(l) =  xil(l)  !*exgam JCW bad way to do this
-           expbesp(l) = xilp(l) !*exgam
-         end do
-!      end if
-
+      do l = 0, lmax
+         if(l .eq. 0) xilp(0) = xil(1)
+         if(l .ne. 0) xilp(l) = xil(l-1) - l / gamma * xil(l) !derivative by recurrence
+         expbes(l) =  xil(l)
+         expbesp(l) = xilp(l)
+      end do
 
       do l = 0, lmax
          expbesovergam(l) = expbes(l) / gamma
       end do
-
-  100 format('ier = ', i5, 'besic failed')
+  100 format('ier = ', i5, 'cbesi failed')
       return
       end
 
