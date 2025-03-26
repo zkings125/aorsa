@@ -2,7 +2,7 @@ include compileropts.gnu
 
 # module load  cray-hdf5
 # module load cray-netcdf
-
+WARNING_FLAGS+=-fallow-argument-mismatch
 FC = ftn
 #change to your pgplot path if needed
 PGPLOT_PATH = /global/cfs/cdirs/m77/pgplot
