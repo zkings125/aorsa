@@ -226,11 +226,13 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
 
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
-     .         / (2. * gammab(1) * y)
-         endif
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 
@@ -240,14 +242,16 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
 
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
-     .         / (2. * gammab(1) * y)
-         endif
-
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
+      
          xkprl_eff = xkprl / fgam 
 
       end if
@@ -825,11 +829,13 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
 
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
-     .         / (2. * gammab(1) * y)
-         endif
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 
@@ -839,13 +845,15 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
 
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
-     .         / (2. * gammab(1) * y)
-         endif
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 
@@ -1116,11 +1124,13 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
 
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
-     .         / (2. * gammab(1) * y)
-         endif
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 
@@ -1130,14 +1140,16 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
 
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
-     .         / (2. * gammab(1) * y)
-         endif
-
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
+      
          xkprl_eff = xkprl / fgam 
 
       end if
@@ -1699,12 +1711,13 @@ c         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
 
-         if(lmax>0 .and. gammab(1)>1.0e-05)then
+         if(lmax>0) then
+         if (gammab(1)>1.0e-05)then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
      &         / (2. * gammab(1) * y)
-         endif
-      
+         end if
+         end if
          xkprl_eff = xkprl / fgam 
       end if
 
@@ -1712,13 +1725,15 @@ c         if(abs(gammab(l)) .lt. .01)gammab(l) = .01
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
 
-         if(lmax>0 .and. gammab(1)>1.0e-05)then
+         if(lmax>0) then
+         if (gammab(1)>1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
      &         / (2. * gammab(1) * y)
-         endif
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 
@@ -2309,11 +2324,13 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
 
-         if(gammab(1) .gt. 1.0e-05)then
+         if (lmax>0) then
+         if (gammab(1)>1.0e-05) then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
-     .         / (2. * gammab(1) * y)
-         endif
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 
@@ -2323,13 +2340,15 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
 
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
-     .         / (2. * gammab(1) * y)
-         endif
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 
@@ -2869,7 +2888,7 @@ c      end if
       
       do l = lmin, lmax
          labs = abs(l)
-         reson = (omgrf - l * real(omgc)) / omgrf
+
          reson = (omgrf - l * real(omgc)) / omgrf
 c        if (abs(reson) .lt. 0.02)then
          if (rho .gt. 1.0 .or. eqtype .ne. 'tokamak') then
@@ -2904,11 +2923,14 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .ge. 0.0)then
          fgam = 1.0
 
+         
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             y = y0
             fgam = (sqrt(1. +  4. * gammab(1) * y) - 1.)
-     .         / (2. * gammab(1) * y)
-         endif
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 
@@ -2918,13 +2940,15 @@ c         if(abs(gammab(l)) .gt. 1000.0) gammab(l) = 1000.0
       if(sgn_kprl .lt. 0.0)then
          fgam = 1.0
 
+         if(lmax>0) then
          if(gammab(1) .gt. 1.0e-05)then
             descrim = 1. - 4. * gammab(1) * y0
             if (descrim .ge. 0.0) y =   y0
             if (descrim .lt. 0.0) y = - y0
             fgam = (1. - sqrt(1. -  4. * gammab(1) * y) )
-     .         / (2. * gammab(1) * y)
-         endif
+     &         / (2. * gammab(1) * y)
+         end if
+         end if
 
          xkprl_eff = xkprl / fgam 
 

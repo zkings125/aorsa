@@ -490,9 +490,8 @@ c     .   nxmx, nymx, dr, dz)
       bphi =surf2(xprime, yprime, nnodex, nnodey, xprimea, yprimea,
      .   bzn, nxmx, zbzn, sigma)
 
-      modb = sqrt(br**2+bz**2+bphi**2)
-!surf2(xprime, yprime, nnodex, nnodey, xprimea, yprimea,
-!     .   bmod, nxmx, zbmod, sigma)
+      modb = surf2(xprime, yprime, nnodex, nnodey, xprimea, yprimea,
+     .   bmod, nxmx, zbmod, sigma)
      
       bratio_phi=surf2(xprime, yprime, nnodex, nnodey, xprimea, yprimea,
      .   bratio, nxmx, zbratio, sigma)

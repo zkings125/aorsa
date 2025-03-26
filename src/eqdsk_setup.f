@@ -1461,7 +1461,7 @@ c        do j = 1, nnodey - 1
 
             capr_x0 = capr(i) + dx / 2.0
             capz_x0 = y(j) + dy / 2.0
-            write(*,*) 'eq setup, field lines', i,capr_x0,capz_x0
+
             x_extint = capr_x0 - rt
             y_extint = capz_x0
 
@@ -1555,11 +1555,8 @@ c           write(6, 1314) i, j, psix, psilim_
                if(ncell .eq. 0 .and. n_phi .eq. 1)nphi_enter = n_phi
                if(ncell .eq. 0 .and. n_phi .ne. 1)nphi_enter = n_phi - 1
 
-!               write(6,*) 'extint call 1558a ',phi,h0
                call extint(nmax, phi, y_phi, f, h0, mmax, error)
-               !write(*,*) 'extint 1558b',phi,h0
                ncell = ncell + 1
-!               write(6,*) 'extint call 1558b ',phi,h0
 
                xprimex = y_phi(1)
                yprimex = y_phi(2)
@@ -1650,9 +1647,7 @@ c               h0 = twopi / 720.
 
                   h0 = abs(2.0 * delta_x / (dxdphi + dxdphi_prev))
 
-                  !write(6,*) 'extint call 1558e ',phi,h0
                   call extint(nmax, phi, y_phi, f, h0, mmax, error)
-                  !write(6,*) 'extint call 1558f ',phi,h0                  
                   xprimex = y_phi(1)
                   yprimex = y_phi(2)
 
@@ -1796,9 +1791,7 @@ c     &                i_box
                   delta_y = yprime_want - yprime_prev
 
                   h0 = abs(2.0 * delta_y / (dydphi + dydphi_prev))
-                  write(6,*) 'extint call 1558f ',phi,h0
                   call extint(nmax, phi, y_phi, f, h0, mmax, error)
-                  write(6,*) 'extint call 1558g ',phi,h0                  
                   xprimex = y_phi(1)
                   yprimex = y_phi(2)
 
@@ -1921,8 +1914,6 @@ c     &                i_box
 *             -----------------------------------------------
               if(n_phi .ge. 2)then
                  delta_b = (modb_x(n_phi) - modb_x(n_phi -1))
-                 write(6,*) 'extint call 1558c ',delta_b, 
-     &                   i_stop,delta_l,h0
                  if (delta_b .ge. 1.0e-05 .and. i_stop .eq. 0)i_stop = 1
                  if (delta_b .lt. -1.0e-05 .and. i_stop .eq. 1)go to 201
               end if
@@ -2013,7 +2004,6 @@ c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
            
            i_sav = i
            j_sav = j
-           print *,'dl ',i,j,dldb_tot12(i,j)        
            end if  !endif for psix .le. psilim_    
 
          end do  ! end do for y big loop
@@ -2037,15 +2027,14 @@ c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
 *     -----------------------------
       call flux_to_rz(nnodex, nnodey, profile_in, 
      &   profile_out, rho_in, nrho, rho_ij) 
-      write(*,*) 'check pt 1',profile_out
       dldb_tot12(1:nnodex, 1:nnodey) = profile_out 
                       
       call polavg(dldb_tot12, dldbavg, rho, nxmx, nymx, nrhomax,
      &   nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol, fvol)
-      write(*,*) 'check pt 2'
+
       call volume_xy(rho, nxmx, nymx, nrhomax,
      &   nnodex, nnodey, nnoderho, drho, dx, dy, capr, rt, dvol_xy)
-      write(*,*) 'check pt 3'     
+
 
      
 9318  format(a128)
@@ -4462,7 +4451,7 @@ c      end if
      
 
 
-      n_theta_check = 75
+      n_theta_check = int(n_theta_max/2.)
       
 
 c      do i = 2, nnodex - 1
@@ -4568,9 +4557,7 @@ c           write(6, 1314) i, j, psix, psilim_
                if(ncell .eq. 0 .and. n_phi .eq. 1)nphi_enter = n_phi
                if(ncell .eq. 0 .and. n_phi .ne. 1)nphi_enter = n_phi - 1
                
-               write(6,*) 'extint call 1558h ',phi,h0
                call extint(nmax, phi, y_phi, f, h0, mmax, error)
-               write(6,*) 'extint call 1558i ',phi,h0
                ncell = ncell + 1
 
 
@@ -4663,9 +4650,7 @@ C                h0 = twopi / 360.
 
                   h0 = abs(2.0 * delta_x / (dxdphi + dxdphi_prev))
 
-                  write(6,*) 'extint call 1558j ',phi,h0
                   call extint(nmax, phi, y_phi, f, h0, mmax, error)
-                  write(6,*) 'extint call 1558k ',phi,h0
                   
                   xprimex = y_phi(1)
                   yprimex = y_phi(2)
@@ -5054,7 +5039,6 @@ c          write(115, *)"dldb_tot12(i,j) = ",dldb_tot12(i,j)
 *     -----------------------------         
       call flux_to_rz(nnodex, nnodey, profile_in, 
      &   profile_out, rho_in, nrho, rho_ij) 
-      print *, 'profile_out', profile_out
 
       dldb_tot12(1:nnodex, 1:nnodey) = profile_out(1:nnodex, 1:nnodey)
                       
