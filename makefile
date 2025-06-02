@@ -15,11 +15,12 @@ F90FLAGS =
 WARNING_FLAGS = 
 
 # per file build warning flags
-ORBIT_F_WARNING_FLAGS = 
+ORBIT_F_WARNING_FLAGS = -ffpe-trap=invalid
 
 OBJ_FILES = \
  $(OBJ_DIR)/cauchy_mod.o \
  $(OBJ_DIR)/size_mod.o \
+ $(OBJ_DIR)/cbessel_mod.o \
  $(OBJ_DIR)/aorsa2din_mod.o \
  $(OBJ_DIR)/swim_global_data_mod.o \
  $(OBJ_DIR)/precision_mod.o \
@@ -45,7 +46,6 @@ OBJ_FILES = \
  $(OBJ_DIR)/fourier.o \
  $(OBJ_DIR)/assert.o \
  $(OBJ_DIR)/setupblacs.o \
- $(OBJ_DIR)/bessel.o \
  $(OBJ_DIR)/check.o \
  $(OBJ_DIR)/rf2x_setup2.o \
  $(OBJ_DIR)/profile_setup.o \
@@ -120,18 +120,7 @@ ifeq ($(LMOD_SYSHOST),perlmutter)
     SYSTEM_IDENTIFIED = 1
   endif
 endif
-ifeq ($(NERSC_HOST),cori)
-  ifeq ($(PE_ENV),GNU)
-    include makeopts.cori.gnu
-    $(info System identified as Cori GNU)
-    SYSTEM_IDENTIFIED = 1
-  endif      
-  ifeq ($(PE_ENV),INTEL)
-    include makeopts.cori.intel
-    $(info System identified as Cori Intel)
-    SYSTEM_IDENTIFIED = 1
-  endif
-endif
+
 ifeq ($(UNAME_S),Darwin) # OSX
   #ifeq ($(UNAME_R),18.7.0)
     include makeopts.osx-mojave
@@ -139,26 +128,55 @@ ifeq ($(UNAME_S),Darwin) # OSX
     SYSTEM_IDENTIFIED = 1
   #endif
 endif
+
 ifeq ($(LSB_IS),Ubuntu)
   ifeq ($(LSB_RS),20.04)
     include makeopts.ubuntu20.04
     $(info System identified as Ubuntu20.04)
     SYSTEM_IDENTIFIED = 1
   endif
+  ifeq ($(LSB_RS),24.04)
+    include makeopts.ubuntu24.04
+    $(info System identified as Ubuntu20.04)
+    SYSTEM_IDENTIFIED = 1
+  endif
 endif
 
-#$(error EXIT)
+ifeq ($(SLURM_CLUSTER_NAME),eofe7) #building on node of engaging cluster
+ifeq ($(LSB_IS),CentOS) #building on node of engaging cluster
+  ifdef MKLROOT
+  include makeopts.eofe7.intel
+  $(info "Intel found" )
+  else
+  include makeopts.eofe7
+  $(info "gcc assumed" )
+  endif
+  SYSTEM_IDENTIFIED = 1
+endif
+ifeq ($(LSB_IS),Rocky) #building on node of engaging cluster
+  ifdef MKLROOT
+  include makeopts.engaging.oneapi
+  $(info "Intel on rocky found" )
+  SYSTEM_IDENTIFIED = 1
+  endif
+endif
+endif
+
+ifeq ($(HOSTNAME),eofe7.mit.edu)  #building on host
+  include makeopts.eofe7
+  SYSTEM_IDENTIFIED = 1
+endif
 
 ifeq ($(SYSTEM_IDENTIFIED),0)
   $(error No build configuration for this system)
 endif
 
 
-F90          = $(FC) -c $(COMMON_OPTION) #$(INCLUDE_DIRS)
-F90_NOSAVE   = $(FC) -c $(COMMON_OPTION2) # $(INCLUDE_DIRS)
-F90_r4       = $(FC) -c $(COMMON_OPTION3) #$(INCLUDE_DIRS)
-F90_4        = $(FC) -c $(COMMON_OPTION4) #$(INCLUDE_DIRS)
-F90_LOAD     = $(FC)    $(COMMON_OPTION) #$(INCLUDE_DIRS)
+F90          = $(FC) -cpp -c $(COMMON_OPTION) 
+F90_NOSAVE   = $(FC) -cpp -c $(COMMON_OPTION2)
+F90_r4       = $(FC) -cpp -c $(COMMON_OPTION3)
+F90_4        = $(FC) -cpp -c $(COMMON_OPTION4)
+F90_LOAD     = $(FC)    $(COMMON_OPTION) 
 
 INLINE=
 OPTIMIZATION =  
@@ -193,9 +211,6 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F90
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.F
 	${COMPILE90} -c $< -o $@ ${INCLUDE_DIRS} ${WARNING_FLAGS}
 
-${OBJ_DIR}/orbit.o: ${SRC_DIR}/orbit.f
-	${COMPILE90} -c $< -o $@ ${INCLUDE_DIRS} ${SIGMA_F_WARNING_FLAGS}
-
 
 $(OBJ_DIR)/rf2x_setup2.o:    $(SRC_DIR)/rf2x_setup2.f 
 	                     $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/rf2x_setup2.o \
@@ -211,11 +226,11 @@ $(OBJ_DIR)/eqdsk_setup.o:    $(SRC_DIR)/eqdsk_setup.f
 
 $(OBJ_DIR)/orbit.o:          $(SRC_DIR)/orbit.f
 	                     $(COMPILE90_NOSAVE) -o $(OBJ_DIR)/orbit.o \
-                             $(SRC_DIR)/orbit.f $(INCLUDE_DIRS)			     
+                             $(SRC_DIR)/orbit.f  ${ORBIT_F_WARNING_FLAGS} $(INCLUDE_DIRS)
 
 $(OBJ_DIR)/eqdsk_plot.o:     $(SRC_DIR)/eqdsk_plot.f90
 	                     $(COMPILE_r4) -o $(OBJ_DIR)/eqdsk_plot.o \
-                             $(SRC_DIR)/eqdsk_plot.f90 $(INCLUDE_DIRS) $(WARNING_FLAGS)				     
+                             $(SRC_DIR)/eqdsk_plot.f90 $(INCLUDE_DIRS) $(WARNING_FLAGS)
 
 $(OBJ_DIR)/fieldws.o:        $(SRC_DIR)/fieldws.f
 	                     $(COMPILE_r4) -o $(OBJ_DIR)/fieldws.o \
@@ -231,7 +246,7 @@ $(OBJ_DIR)/dql_write.o:      $(SRC_DIR)/dql_write.f
 
 $(OBJ_DIR)/plot.o:           $(SRC_DIR)/plot.f
 	                     $(COMPILE_r4) -o $(OBJ_DIR)/plot.o \
-                             $(SRC_DIR)/plot.f $(INCLUDE_DIRS)				     
+                             $(SRC_DIR)/plot.f $(INCLUDE_DIRS)
 
 ### FFTPACK files:
 

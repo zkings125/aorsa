@@ -1,4 +1,3 @@
-
       subroutine run_rf2x(nmodesx, nmodesy, rwleft, rwright,
      &   ytop, ybottom, myid, nxdim, nydim,
      &   rt, b0, rho,
@@ -28,13 +27,13 @@
 
       integer nxmx, nymx, idiag, jdiag, ieq, n_prof_flux
       integer ndfmax,
-     1    ninteg, nd, izoom1, izoom2, jzoom1, jzoom2, ndf, nmaxe, irnc
+     &    ninteg, nd, izoom1, izoom2, jzoom1, jzoom2, ndf, nmaxe, irnc
       integer nrow, ncol, norder, iprofile
 
       integer mkdim1, mkdim2
 
       integer nkdim1, nkdim2, nkx1, nkx2, nldim, nldim3,
-     1   nky1, nky2, iant
+     &   nky1, nky2, iant
 
       real eslow, eslowev, qi_slo, eta_slo, z_slo, xmi_slo, amu_slo,
      &    xn_slo
@@ -270,8 +269,8 @@ c      parameter (mmodesmax = 450)
 *     ---------------------------------
 *     set default values of input data:
 *     ---------------------------------
-
-      nnoderho = 50
+      nnodex = nmodesx  !assignment to nnodex      
+      nnoderho = nnodex/2
 
       n_prof_flux = 1
 
@@ -426,8 +425,6 @@ c      parameter (mmodesmax = 450)
 
       nkx2 = nmodesx / 2
       nkx1 = - nmodesx / 2 + 1
-      nnodex = nmodesx
-
 
 
       nky2 = nmodesy / 2
@@ -673,7 +670,7 @@ c      rhomax = 1.0
             n = int(rho_fine(i,j) / drho) + 1
             if(n .le. nnoderho .and. n .ge. 1)then
                dvol(n) = dvol(n)+ dx_fine * dy_fine *twopi *capr_fine(i)
-               darea(n) = darea(n)+ dx_fine * dy_fine * capr_fine(i)/ rt               
+               darea(n) = darea(n)+ dx_fine * dy_fine !JCW * capr_fine(i)/ rt
             end if
          end do
       end do
@@ -783,10 +780,8 @@ c      rhomax = 1.0
 *     --------------------------------------------
 *     Integrate flux averaged quantities over rhon:
 *     --------------------------------------------
-
       call rhograte(rhon, xjprlavg, 1, nnoderho, xjprl_int, 
      &                                               nrhomax, darea)
-     
      
       call rhograte(rhon, redotjeavg, 1, nnoderho, redotje_int, 
      &                                                nrhomax, dvol)
@@ -979,9 +974,6 @@ c      rhomax = 1.0
          
       end if
      
-         
-
-
       do n = 1, nnoderho
          xkti3avg(n) = xkti3avg(n) / q
       end do

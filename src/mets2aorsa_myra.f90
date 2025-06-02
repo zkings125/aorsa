@@ -17,13 +17,14 @@
        & lmaxdim, ndist, nzeta)
 
 
+    use Complex_Bessel, only: cbesj
     implicit none
 
     integer:: i_global, j_global, ier, nxdim, nydim, k, lmaxdim, ndist
     integer, intent(IN):: NUPAR, NUPER, lmax
     integer:: nkx1, nkx2, nky1, nky2, j_upar, k_uper
     integer:: nkdim1, nkdim2, mkdim1, mkdim2
-    integer:: NHARM, IHARM, M, N, i, nzeta
+    integer:: NHARM, IHARM, M, N, i, nzeta, nz
 
     real::  uxx, uxy, uxz, uyx, uyy, uyz, uzx, uzy, uzz
     real::  xkphi
@@ -106,9 +107,9 @@
 
     if(nzeta .eq. 1)then
 
-    ! -------------------------------------------------------- !
+    ! --------------------------------------------------------- !
     ! ---Don't interpolate: precalculate all Bessel functions-- !
-    ! -------------------------------------------------------- !
+    ! --------------------------------------------------------- !
 
        do n = nkx1, nkx2
           do m = nky1, nky2
@@ -127,7 +128,8 @@
 
              zeta = xkperpn * uper(k_uper) * c * sqmut0i / wc
 
-             call besjc(zeta, nharm + 2, b, ier)
+             !             call besjc(zeta, nharm + 2, b, ier)
+             call cbesj(zeta, 0.0, 1, nharm + 3, b, nz ,ier)
              if(ier .ne. 0) write(6, *) "ier = ", ier
 
              do IHARM = 0, NHARM + 1
@@ -181,8 +183,9 @@
        do i = 1, nzeta + 1
           zetai(i) = zetamin + (i - 1) * dzeta
           zeta = cmplx(zetai(i), 0.0)
-        
-          call besjc(zeta, nharm + 2, b, ier)
+
+          call cbesj(zeta, 0.0, 1, nharm + 3, b, nz ,ier)
+!          call besjc(zeta, nharm + 2, b, ier)
 !          if(ier .ne. 0) write(6, *) "ier = ", ier
         
           do iharm = 0, NHARM + 1

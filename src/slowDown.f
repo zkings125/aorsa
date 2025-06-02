@@ -7,9 +7,10 @@ c
      .   sigzx, sigzy, sigzz,
      .   xkprl, xkperp, lmin, lmax)
 
+      use Complex_Bessel, only: cbesj
       implicit none
 
-      integer lmin, lmax
+      integer lmin, lmax, nz
 
       real q, zeff, velect, valpha, omgc, omgp2, omgrf, xkprl, xkperp
       real beta, alfa, xk0, chrg, xkz, rdz, vm, vte, zions, qe,
@@ -240,9 +241,10 @@ c
 *     ------------------
 *     generate m matrix
 *     ------------------
-
-      complex rx,rx2,bj,bjp,besc(50),arg
+      use Complex_Bessel, only: cbesj
+      complex rx,rx2,bj,bjp,besc(100),arg
       dimension bes(3)
+      integer nz
       complex um(6),ci
       common /int/ rx,rx2,b,bet,vmax,rz,rz2,u,n
       ci=cmplx(0.,1.)
@@ -256,20 +258,22 @@ c
       if (nabs.ge.1) go to 220
       a1=0.
       nj=2
-        nmax=1
-        call besjc(arg,nmax,besc,ier)
-        bj=besc(1)
-        bjp=-besc(2)
-        if (ier .ne. 0) write(59,10) ier
-10      format( ' ier in besjc is ',i2)
+      nmax=1
+      call cbesj(arg, 0.0, 1, nmax+1, besc, nz ,ier)      
+!        call besjc(arg,nmax,besc,ier)
+      bj=besc(1)
+      bjp=-besc(2)
+      if (ier .ne. 0) write(59,10) ier
+ 10   format( ' ier in besjc is ',i2)
       go to 225
 220   a1=nabs-1
       nj=3
-        nmax=nabs+1
-                                call besjc(arg,nmax,besc,ier)
-        bjp=(besc(nabs)-besc(nabs+2))/2.
-        bj=besc(nabs+1)
-        if(ier .ne. 0) write(59,10)ier
+      nmax=nabs+1
+      call cbesj(arg, 0.0, 1, nmax+1, besc, nz ,ier)      
+!      call besjc(arg,nmax,besc,ier)
+      bjp=(besc(nabs)-besc(nabs+2))/2.
+      bj=besc(nabs+1)
+      if(ier .ne. 0) write(59,10)ier
 225   continue
 c
 c evaluate um vectors, consisting of the 6 independant

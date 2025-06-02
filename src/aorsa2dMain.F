@@ -1,6 +1,10 @@
 
 *----------------------------------------------------------------------
-*     AORSA2D: version 20 (04-28-2010)
+*     AORSA2D: version 30 (04-010-2025)
+*     Code modernization, non square mesh working, mirror (R=0, Ip=0)
+*     Some memory and bounds errors fixed. Dynamic allocation begun
+      
+*     version 20 (04-28-2010)
 *     This version includes odd-order derivative in the conductivity
 *     Special eqdsk_setup for Alcator-C lower hybrid
 *        (eqdsk_special .ne. 0)
@@ -27,7 +31,15 @@ c      use zfun_hilbert
 
       implicit none
 
-      integer, parameter :: real32=selected_real_kind(6,37)
+      ! for pgplot
+      integer, parameter :: real32=selected_real_kind(6,37)      
+      ! constants
+      real, parameter ::  q = 1.6e-19, qe = -q
+      complex, parameter :: zi = cmplx(0.0,1.0)
+      real, parameter :: eps0 = 8.85e-12, pi = 3.141592654,
+     &     twopi = 2.0 * pi,
+     &     xmu0 = 1.26e-06, clight = 1.0 / sqrt(eps0 * xmu0)
+
       complex :: l2norm_res, l2norm_rhs
       integer :: ieer ! fft error flag
       integer :: n_theta_max, n_theta, n_psi_max, nt, k, nbessj
@@ -90,15 +102,15 @@ c      CHARACTER(128) :: root
       integer :: nnodex_loc, nx_overlap, nnodex_eff
       integer :: nnodey_loc, ny_overlap, nnodey_eff
       integer :: istart, ifinish, jstart, jfinish
-     &  i_seg, j_seg, iseg1, iseg2, jseg1, jseg2, i0, j0
+     &  i_seg, j_seg, iseg1, iseg2, jseg1, jseg2, i0, j0, loc0(2)
 
       integer :: nxmx,nymx,ieq, nlmx, nkldim1, nkldim2, nkl, nkl1, nkl2
-      integer nmax, mmax
+      integer :: nmax, mmax
       real :: zeta_max, zeta_min, dzeta, dKdL, dkprldl, d2kprldl2
       real :: a0, a1, b1, psil, c0, xkprl_phi, xkprl_perp, psil0
       real :: rt_init, b0_init
 
-      complex z0n, z1n, z2n
+      complex :: z0n, z1n, z2n
       integer :: incX, global_row, global_col
       integer :: ndfmax, lwork, lrwork,
      &    ninteg, nd, izoom1, izoom2, jzoom1, jzoom2, ndf, nmaxe, irnc
@@ -159,7 +171,7 @@ c      CHARACTER(128) :: root
       parameter (n_theta_max = 200)
       parameter (n_psi_max = 200)
 
-      parameter (nxmx = nmodesmax)
+      parameter (nxmx = nmodesmax) !from size_mod, but used to set lwork for scalapack
       parameter (nymx = mmodesmax)
 
       parameter (nlmx = 512)
@@ -178,6 +190,8 @@ c      CHARACTER(128) :: root
       parameter (nldim  = nxmx * nymx)
       parameter (nldim3 = 3 * nldim)
       parameter (ndfmax = nldim3)
+!      parameter (lwork = ndfmax) !jcw temp
+!      parameter (lrwork = ndfmax)
 
       parameter (lmaxdim = 99)
 
@@ -299,7 +313,7 @@ c      CHARACTER(128) :: root
       character(1):: trans
 
       integer :: info
-      complex b, zi, cexpkxky
+      complex b, cexpkxky
       complex alpha
 
       real :: norm2, norm2_max, alphae, alpha1
@@ -404,10 +418,11 @@ c     &        yy_inv(mkdim1 : mkdim2, 1 : nymx)
       real :: xkthrho, wphase, vsound, domgk, xkthdx, omgestar, rhoi10,
      &   v0i, vthi10, vthe, vthi, vphase, rhoi1overl, rnz, eta2,
      &   xk0, shearedge, eta1, xn1, xmi1, xmh, xme, qi1, xmi2,
-     &   xmi3, t0i, t0i2, t0i3, t0e, q, teedge, clight, xmu0, xlnlam,
-     &   omgci10, omgrf, xmax, qe, qi2, pi, twopi, eps0, qi3,
+     &   xmi3, t0i, t0i2, t0i3, t0e, teedge, xlnlam,
+     &   omgci10, omgrf, xmax, qi2, qi3,
      &   costh, sinth, radius, rnx,  rny, rnphi
       real :: ymaxp, yminp, xminp, xmaxp
+      complex ::  omgrfc
       real :: rhoi20, vthi20, omgci20
       real :: rhoi30, vthi30, omgci30
       real :: rhoi40, vthi40, omgci40
@@ -597,7 +612,7 @@ c     &        yy_inv(mkdim1 : mkdim2, 1 : nymx)
      &   bmod2, rhom1, bxn, byn, bzn, pressi, muhat, nu_star,
      &   ipsi, xna_slo, gradprlb, omgp2_slo, omgci_slo, zeff,
      &   rho_pol2d, psi_pol2d, drhodr, drhodz,
-     &   dthedr, dthedz, reomg1a, reomg2a, reomg3a, xjx, xjy, xjz,
+     &   dthedr, dthedz, reomg1a, reomg2a, reomg3a, xjx, xjy, xjz,xjt,
      &   ntilda_e_real, reomglha
 
       real :: cur_mod, cur_mod_max, npar
@@ -814,7 +829,7 @@ c     &        uzzk(nkdim1 : nkdim2, mkdim1 : mkdim2)
       complex, allocatable :: p_brhs(:), p_brhs_copy(:)
 
       real :: err_max,err,b_nrm2,err_nrm2
-      complex, dimension(ndfmax) ::brhs2,brhsk,brhs_tmp
+      complex, dimension(ndfmax) :: brhs2,brhsk,brhs_tmp
       integer :: icnc
       logical :: ismine, ismine1
 
@@ -865,7 +880,6 @@ c       integer, dimension(:,:,:), allocatable :: descbrhs_all
         real :: rho_thresh
 
 
-
         complex :: aij, beta
 c       complex, dimension(:,:), allocatable :: brhs
         real,    dimension(:,:), allocatable :: work
@@ -875,8 +889,15 @@ c       complex, dimension(:,:), allocatable :: Btmp
 
         complex, dimension(ndfmax) :: row,rowk
 
-        complex, dimension(ndfmax) :: workn
-        real, dimension(ndfmax) :: rwork
+!if static
+!        complex :: workn(lwork)
+!        real :: rwork(lrwork)
+!else
+        complex, dimension(:), allocatable :: workn
+        real, dimension(:), allocatable :: rwork
+!fi
+
+        real :: srwork(2), sworkn(2)
         real :: pzlange, anorm, rcond
 
         logical, parameter :: use_fft = .true.
@@ -895,15 +916,8 @@ c       complex, dimension(:,:), allocatable :: Btmp
 
 
       integer :: indxg2p,indxg2l,indxl2g
+      integer :: ierr
       external indxg2p,indxg2l,indxl2g
-
-! DLG - check to make sure the problem size you are running is <= the
-! compile time parameters, i.e.,
-
-      if (nmodesx .gt. nmodesmax .or. nmodesy .gt. mmodesmax) then
-        stop 'ERROR - nmodesx and nmodesy must be <= nmodesmax and '//
-     &        'mmodesmax respectively (see src/size_mode.f90)'
-      end if
 
 *     ---------------
 *     allocate arrays
@@ -992,7 +1006,7 @@ c       complex, dimension(:,:), allocatable :: Btmp
      &   dthedr(nxmx, nymx),  dthedz(nxmx, nymx),
      &   reomg1a(nxmx, nymx), reomg2a(nxmx, nymx), reomg3a(nxmx, nymx),
      &   xjx(nxmx, nymx), xjy(nxmx, nymx), xjz(nxmx, nymx),
-     &   reomglha(nxmx, nymx))
+     &   xjt(nxmx, nymx), reomglha(nxmx, nymx))
 
 
       allocate (wdote(nxmx, nymx), wdoti1(nxmx, nymx),
@@ -1129,6 +1143,15 @@ c       complex, dimension(:,:), allocatable :: Btmp
 *     ------------------------
       read (63, aorsa2din)
 
+! DLG - check to make sure the problem size you are running is <= the
+! compile time parameters, i.e.,
+
+      if (nmodesx .gt. nmodesmax .or. nmodesy .gt. mmodesmax) then
+        stop 'ERROR - nmodesx and nmodesy must be <= nmodesmax and '//
+     &        'mmodesmax respectively (see src/size_mode.f90)'
+      end if
+
+      
       rt_init = rt
       b0_init = b0
 
@@ -1161,11 +1184,11 @@ c       complex, dimension(:,:), allocatable :: Btmp
 *     ---------------------------------------------------------
       if(nphi_number .gt. 1) prfin=0.0
 
-c      idiag = nmodesx / 2
-c      jdiag = nmodesy / 2
+      idiag = nmodesx / 2
+      jdiag = nmodesy / 2
 
-      idiag = 104
-      jdiag = 90
+!      idiag = 104
+!      jdiag = 90
 
       nbessj = lmax + 2
 
@@ -1176,7 +1199,7 @@ c      jdiag = nmodesy / 2
          stop '** blacs not setup '
       endif
 
-
+      write(*,*) 'myid', myid !JCW temp
 
       if (myid .eq. 0) then
          open(unit=53, file='out_fields', status='unknown',
@@ -1225,10 +1248,7 @@ c      jdiag = nmodesy / 2
       call blacs_gridinfo( icontxt, nprow, npcol, myrow, mycol)
 
 
-
-
-
-      if(nphi_sum_only .eqv. .true.)go to 9001
+      if(nphi_sum_only) go to 9001
 
 *     ----------------
 *     loop over nphi's
@@ -1389,7 +1409,6 @@ c      jequat  = nnodey / 2
 
       rholim = sqrt(psilim)
 
-      q = 1.6e-19
       if(te0 .eq. 0.0)te0 = ti0
 
       t0e = te0
@@ -1433,29 +1452,23 @@ c      jequat  = nnodey / 2
       qi6 = z6 * q
       qi_slo = z_slo * q
 
-      qe = -q
-      zi = cmplx(0.0,1.0)
-      eps0 = 8.85e-12
-
-      pi = 3.141592654
-      twopi = 2.0 * pi
-
       xlnlam = 20.0
-      xmu0 = 1.26e-06
-      clight = 1.0 / sqrt(eps0 * xmu0)
 
-
-      xkphi0 = nphi / rt_init
-      xkphia = nphi / rant
-      if(xkphi0 .eq. 0.0)xkphi0 = 1.0e-05
-
+      if (nphi==0) then
+         xkphi0 = 1.0e-5
+         xkphia = 1.0e-5
+      else
+         xkphi0 = nphi / (rt_init+1.e-5)  !JCW fix better. cylindrical equations at the origin
+         xkphia = nphi / (rant+1e-5)
+      end if
 
       xnurf = freqcy
 
-      omgrf = 2.0 * pi * xnurf
+      omgrf = twopi * xnurf
+      omgrfc = omgrf*(1.+zi*xnuome)
 
 
-      if (plot_only .eqv. .true.)go to 9002
+      if (plot_only) go to 9002
 
       vphase = omgrf / xkphi0
       vthe = sqrt(t0e / xme)
@@ -1743,9 +1756,9 @@ c         write(6, 7017)rhoi10
          write(6, 1814)xn2
          write(6, 1834)xn3
 
-         write(6, 1012)omgrf
-         write(6, 1009)xnurf
-         write(6, 1013)nphi
+         write(6, 2222) 'omgrf',    omgrf,'hertz' !1012
+         write(6, 2222) 'frequency',xnurf,'hertz' !1009
+         write(6, 2223) 'nphi',     nphi, ' '     !1013
          write(6, 1321)wphase
          write(6, 1322)vphase
          write(6, 1323)vthe
@@ -2058,7 +2071,7 @@ c----------------------------------------------------
                   theta0(i,j) = atan2(y(j), denom)
                   if(theta0(i,j) .ge. 0.0) theta(i,j) = theta0(i,j)
                   if(theta0(i,j) .lt. 0.0) theta(i,j) =
-     1                                       theta0(i,j) + 2.0 * pi
+     1                                       theta0(i,j) + twopi
                end if
 
 
@@ -2958,7 +2971,7 @@ c      write(6, 1312) jzoom2
                theta0(i,j) = atan2(y(j), x(i))
                if(theta0(i,j) .ge. 0.0) theta(i,j) = theta0(i,j)
                if(theta0(i,j) .lt. 0.0) theta(i,j) =
-     1                                       theta0(i,j) + 2.0 * pi
+     1                                       theta0(i,j) + twopi
             end if
          end do
       end do
@@ -2995,7 +3008,7 @@ c      rhomax = 1.0
 *     Define theta mesh: thetam(m)
 *---------------------------------
 c--   thetam: 0 to 2pi
-      thetamax = 2.0 * pi
+      thetamax = twopi
       dtheta = thetamax / (mnodetheta - 1)
       do m = 1, mnodetheta
          thetam(m) = (m-1) * dtheta
@@ -3018,7 +3031,6 @@ c--   thetam: 0 to 2pi
 
             capr_flux(n,m) = capr_out
             capz_flux(n,m) = capz_out
-c           if(myid .eq. 0)write(6,*)n, m, capr_flux(n,m), xj
          end do
       end do
 
@@ -3054,56 +3066,29 @@ c--note curden is in Amps per meter of toroidal length (2.*pi*rt).
 *     ----------------------------------------
       j = jequat
       do i = 2, nnodex -1
-c         if (myid .eq. 0)write(6, 1312)i, rho(i,j), x(i), xprime(i),
-c     &       capr(i)
          if(rho(i,j) .lt. 1. .and. rho(i-1,j) .ge. 1.)caprmin = capr(i)
          if(rho(i,j) .gt. 1. .and. rho(i-1,j) .le. 1.)caprmax =capr(i-1)
       end do
 
       rmax = (caprmax - caprmin) / 2.0
 
-      if(myid .eq. 0)write(6, 311)caprmax, caprmin, rmax
-
-
 
       do n = 1, nnoderho
          rn(n) = rhon(n) * rmax
          epsn(n) = rn(n) / rt
          dn(n) = rmax**2 / taue
-c         if (myid .eq. 0)write(6, 1312)n, rn(n), rhon(n), dn(n)
 c         if (myid .eq. 0)write(15, 1312)n, rn(n), rhon(n), dn(n)
       end do
 
-      do i = 1, nnodex
-         do j = 1, nnodey
-            n = int(rho(i,j) / drho) + 1
-            if (n .eq. 1) then
-               i0 = i
-               j0 = j
-            end if
-         end do
-      end do
 
-      if(i0 .eq. 0 .and. j0 .eq. 0) then
-         do i = 1, nnodex
-            do j = 1, nnodey
-               n = int(rho(i,j) / drho) + 1
-               if (n .eq. 2) then
-                  i0 = i
-                  j0 = j
-               end if
-            end do
-         end do
-
-      end if
-
+      loc0=minloc(int(rho(1:nnodex,1:nnodey) / drho))
+      i0=loc0(1) ; j0=loc0(2)
 
       dr = drho * rmax
 
       do n = 1, nnoderho - 1
          rh(n) = (rn(n) + rn(n+1)) / 2.0
          dh(n) = (dn(n) + dn(n+1)) / 2.0
-c         if (myid .eq. 0)write(6, 1312)n, rh(n), dh(n)
       end do
       rh(nnoderho) = 0.0
       dh(nnoderho) = 0.0
@@ -3248,7 +3233,7 @@ c      end if
       theta_antr = theta_ant / 180. * pi
 
       dpsiant = dpsiant0
-      dthetant = dthetant0 / 360. * 2.0 * pi
+      dthetant = dthetant0 / 360. * twopi
       yant_max = antlen / 2.0
 
 
@@ -3268,9 +3253,9 @@ c      end if
             gaussantth = exp(-delta_theta**2 / dthetant**2)
 
 *           ------------------------
-*           Curved antenna (default)
+*           Curved antenna (default) psi,theta
 *           ------------------------
-            if(curved_ant .eqv. .true.) then
+            if(curved_ant) then
                gausspsi = exp(-( psi(i,j) - psiant)**2 / dpsiant**2)
             end if
 
@@ -3307,6 +3292,7 @@ c                  antlc = pi / (xk0 * antlen)
 
 
                end if
+!               if(curved_ant .eqv. .true.) shapey=gaussantth !allow ant on limited theta !jcw fix
 
                Ix = - dpsidy / gradpsi * cos_antang
                Iy =   dpsidx / gradpsi * cos_antang
@@ -3469,6 +3455,7 @@ c                  antlc = pi / (xk0 * antlen)
      &                               - z_slo * xna_slo(i, j)   ) / z1
 
                if (xn1a(i, j) .le. 0.0) then
+                  if(myid == 0) write(6,*) 'xn1a',xn1a(i,j),i,j
                   xn1a(i, j) = 1.0e-10
                   if(myid .eq.0) write(6, *) xnea(i,j), xn1a(i,j),
      &               xn2a(i,j), xn3a(i,j), xn4a(i,j), xn5a(i,j),
@@ -4124,6 +4111,8 @@ c                     xkti6(i,j) = s_t_s(ndata,6)
          if (nboundary .eq. 1) then
             do i = 1, nnodex
                do j = 1, nnodey
+                  xnuomea(i,j) = xnuome !JCW can modify for internal resonances
+                  xnuomia(i,j) = xnuomi                  
                   if(rho(i,j) .gt. rholim) then
                      xnea(i,j) = 1.0e-10
                      zeff(i,j) = 1.0e-10
@@ -4192,7 +4181,6 @@ c                 xkti2(i,j) = xkti3(i,j)
                if (xn1a(i, j) .le. 0.0) xn1a(i, j) = 1.0e-10
             end do
          end do
-
 
 
          xn00 = xnea(i0, j0)
@@ -4264,6 +4252,7 @@ c                 xkti2(i,j) = xkti3(i,j)
          eta6 = xn60 / xn00
          eta_slo = xn_slo0 / xn00
 
+         xn1 = xn10 !JCW for valfven
       end if
 
 *     --------------------------
@@ -4286,11 +4275,11 @@ c     write (6, *) "xmi1 = ", xmi1
       kperprhoi4 = 0.0
       kperprhoi5 = 0.0
 
-      if (eta1 .ne. 0.0) kperprhoi1 = kalfven * rhoi10
-      if (eta2 .ne. 0.0) kperprhoi2 = kalfven * rhoi20
-      if (eta3 .ne. 0.0) kperprhoi3 = kalfven * rhoi30
-      if (eta4 .ne. 0.0) kperprhoi4 = kalfven * rhoi40
-      if (eta5 .ne. 0.0) kperprhoi5 = kalfven * rhoi50
+      if (eta1 >= 100.*epsilon(eta1)) kperprhoi1 = kalfven * rhoi10
+      if (eta2 >= 100.*epsilon(eta1)) kperprhoi2 = kalfven * rhoi20
+      if (eta3 >= 100.*epsilon(eta1)) kperprhoi3 = kalfven * rhoi30
+      if (eta4 >= 100.*epsilon(eta1)) kperprhoi4 = kalfven * rhoi40
+      if (eta5 >= 100.*epsilon(eta1)) kperprhoi5 = kalfven * rhoi50
 
 
 *     -----------
@@ -4316,7 +4305,7 @@ c     write (6, *) "xmi1 = ", xmi1
          do j = 1, nnodey
             n = int(rho(i,j) / drho) + 1
             if(n .le. nnoderho)then
-               dvol(n)  =  dvol(n) + dx * dy * 2.0 * pi * capr(i)
+               dvol(n)  =  dvol(n) + dx * dy * twopi * capr(i)
                darea(n) = darea(n) + dx * dy * capr(i) / rt
             end if
          end do
@@ -4423,7 +4412,7 @@ c     &                             + pressi4 pressi5 + pressi6
             xnuii = 2.859e-27 * xn1a(i,j) * xlnlam /
      &                      (sqrt(xmi1) * (xkti(i,j)/q)**1.5)
 
-            if(xnuii .ne. 0.0)then
+            if(xnuii >= 100.*epsilon(eta1))then
 
                vthi0 = sqrt(2.0 * xkti(i,j) / xmi1)
                vthe0 = sqrt(2.0 * xkte(i,j) / xme)
@@ -4523,25 +4512,25 @@ c     &                             + pressi4 pressi5 + pressi6
             xc(i,j) = -zi / omgrf / eps0 * xjy(i,j)
             xd(i,j) = -zi / omgrf / eps0 * xjz(i,j)
 
-            capk_perp = 1.0 - omgpe2(i,j) / (omgrf**2 - omgce(i,j)**2)
-     &                      - omgp12(i,j) / (omgrf**2 - omgci1(i,j)**2)
-     &                      - omgp22(i,j) / (omgrf**2 - omgci2(i,j)**2)
-     &                      - omgp32(i,j) / (omgrf**2 - omgci3(i,j)**2)
-     &                      - omgp42(i,j) / (omgrf**2 - omgci4(i,j)**2)
-     &                      - omgp52(i,j) / (omgrf**2 - omgci5(i,j)**2)
-     &                      - omgp62(i,j) / (omgrf**2 - omgci6(i,j)**2)
+            capk_perp =1.0 - omgpe2(i,j) / (omgrfc**2 - omgce(i,j)**2)
+     &                     - omgp12(i,j) / (omgrfc**2 - omgci1(i,j)**2)
+     &                     - omgp22(i,j) / (omgrfc**2 - omgci2(i,j)**2)
+     &                     - omgp32(i,j) / (omgrfc**2 - omgci3(i,j)**2)
+     &                     - omgp42(i,j) / (omgrfc**2 - omgci4(i,j)**2)
+     &                     - omgp52(i,j) / (omgrfc**2 - omgci5(i,j)**2)
+     &                     - omgp62(i,j) / (omgrfc**2 - omgci6(i,j)**2)
 
-            capk_x =(omgce(i,j) * omgpe2(i,j)/(omgrf**2-omgce(i,j)**2)
-     &            + omgci1(i,j) * omgp12(i,j)/(omgrf**2-omgci1(i,j)**2)
-     &            + omgci2(i,j) * omgp22(i,j)/(omgrf**2-omgci2(i,j)**2)
-     &            + omgci3(i,j) * omgp32(i,j)/(omgrf**2-omgci3(i,j)**2)
-     &            + omgci4(i,j) * omgp42(i,j)/(omgrf**2-omgci4(i,j)**2)
-     &            + omgci5(i,j) * omgp52(i,j)/(omgrf**2-omgci5(i,j)**2)
-     &            + omgci6(i,j) * omgp62(i,j)/(omgrf**2-omgci6(i,j)**2))
-     &             / omgrf
+            capk_x =(omgce(i,j) * omgpe2(i,j)/(omgrfc**2-omgce(i,j)**2)
+     &           + omgci1(i,j) * omgp12(i,j)/(omgrfc**2-omgci1(i,j)**2)
+     &           + omgci2(i,j) * omgp22(i,j)/(omgrfc**2-omgci2(i,j)**2)
+     &           + omgci3(i,j) * omgp32(i,j)/(omgrfc**2-omgci3(i,j)**2)
+     &           + omgci4(i,j) * omgp42(i,j)/(omgrfc**2-omgci4(i,j)**2)
+     &           + omgci5(i,j) * omgp52(i,j)/(omgrfc**2-omgci5(i,j)**2)
+     &           + omgci6(i,j) * omgp62(i,j)/(omgrfc**2-omgci6(i,j)**2))
+     &           / omgrfc
 
-           left  = capk_perp - capk_x
-           right = capk_perp + capk_x
+            left  = capk_perp - capk_x !S-D=L
+            right = capk_perp + capk_x !S+D=R
 
             xnphi = bzn(i,j) * xkphi(i) / xk0
 c            acold(i,j) = xnphi**2 - capk_perp
@@ -4551,7 +4540,7 @@ c            acold(i,j) = xnphi**2 - capk_perp
             ccold(i,j) = right - xnphi**2
 
             xkperp_cold2(i,j) = bcold(i,j) * ccold(i,j) / acold(i,j)
-            xkperp_cold(i,j) = csqrt(xkperp_cold2(i,j))
+            xkperp_cold(i,j) = sqrt(xkperp_cold2(i,j))
             if (j .eq. jmid) kimag_cold(i) = aimag(xkperp_cold(i,j))
 
          end do
@@ -4727,24 +4716,24 @@ c     &         xnea(i,j), re_acold
       end do
 
 
-      if(myid .eq. 0)write(6, *) "      n       xkxsav"
+      if(myid .eq. 0)write(6, *) "      n       xkxsav",xmax
       do n = nkx1, nkx2
-         xkxsav(n) = 2.0 * pi * n / xmax
+         xkxsav(n) = twopi * n / xmax
          if(myid .eq. 0)write(6, *) n,  xkxsav(n)
       end do
-
+ 
 
 
       if(myid .eq. 0)write(6, *) "      m       xkysav"
       do m = nky1, nky2
-         xkysav(m) = 2.0 * pi * m / ymax
+         xkysav(m) = twopi * m / ymax
          if(myid .eq. 0)write(6, *) m,  xkysav(m)
       end do
 
-      mdisp = xkydisp * ymax / (2.0 * pi)
+      mdisp = xkydisp * ymax / (twopi)
 
-      n_ono = xkx_ono * xmax / (2.0 * pi)
-      m_ono = xky_ono * ymax / (2.0 * pi)
+      n_ono = xkx_ono * xmax / (twopi)
+      m_ono = xky_ono * ymax / (twopi)
 
 
 
@@ -5113,7 +5102,7 @@ c        call flush
       end if
 
 
-      if (read_solution .eqv. .true.) then
+      if (read_solution) then
          t1 = second1(dummy)
 !        ---------------------------------------------
 !        read solution in Fourier space to all processors
@@ -5177,6 +5166,7 @@ c           call flush
       allocate(p_amat(p_amat_dim))
       p_amat(:) = cmplx(0.0,0.0)
 
+
       if(write_for_azzam)then
         allocate(p_amat_copy(p_amat_dim))
         p_amat_copy(:) = cmplx(0.0,0.0)
@@ -5199,8 +5189,31 @@ c           call flush
         write(6,*) 'lld = ', lld
         write(15,*) '** descinit for amat returns info = ', info
         write(15,*) 'lld = ', lld
+        write(6,*) 'nrow,mb: ',nrow,mb
+        write(6,*) 'pzgecon args', nrow,anorm,rcond
         stop '** error ** '
       endif
+
+
+      call pzgecon('1', nrow, p_amat, 1, 1, desc_amat, anorm, rcond,
+     &          sworkn, -1, srwork, -1, info)
+      if (myid==0) then
+         write(*,*) 'pzgecon',sworkn(1),srwork(1),nxmx,desc_amat
+      end if
+      lwork = int(sworkn(1))
+
+      lrwork = int(srwork(1)) !jcw temp
+
+      allocate (workn(lwork),stat=ierr)
+      if (ierr.ne.0) then
+         write(*,*) myid,ierr,'failed to allocate workn',lwork
+         stop
+      end if
+      allocate (rwork(lrwork),stat=ierr)
+      if (ierr.ne.0) then
+         write(*,*) myid,ierr,'failed to allocate rwork',lrwork
+         stop
+      end if
 
       do irnc=1,nrow_local*ncol_local
         p_amat(irnc) = cmplx(0., 0.)
@@ -5392,7 +5405,7 @@ c           call flush
 
       end if
 
-      psiorb = psilim * 10.0
+      psiorb = psilim * 10.0 !magic number JCW
 
 *     ----------------------------------------------------------------
 *     Load x, y and z equations for spatial point (i,j) and mode number (n,m)
@@ -5408,7 +5421,7 @@ c           call flush
 
 
 
-            if (use_fourier_z2 .eqv. .true.) then
+            if (use_fourier_z2) then
 
 *           ---------------------------------------------------------
 *           if nboundary = 1, just do orbits in interior plasma region
@@ -5423,7 +5436,7 @@ c           call flush
 c--            lb(nl):  0 to lbmax
 c--            lbprime(nl): -lbmax / 2 to lbmax / 2
 
-                lbmax = 2.0 * pi * rt * qsafety(i, j)
+                lbmax = twopi * rt * qsafety(i, j)
 
 
                dlb = lbmax / nnodelb
@@ -5434,7 +5447,7 @@ c--            lbprime(nl): -lbmax / 2 to lbmax / 2
                end do
 
                do nkl = nkl1, nkl2
-                  xklsav(nkl) = 2.0 * pi * nkl / lbmax
+                  xklsav(nkl) = twopi * nkl / lbmax
                   if (nkl .eq. 0) xklsav(nkl) = 1.0e-05
                end do
 
@@ -5537,6 +5550,7 @@ c               end if
             end if    ! end if use_fourier_z2 .eq. .true.
 
 
+            !within loop over 2d space, loop over wavenumbers
             do n = nkx1, nkx2
                do m = nky1, nky2
 
@@ -5694,7 +5708,7 @@ c               end if
                         end if
 
 
-                         if (use_fourier_z2 .eqv. .true. .and.
+                        if (use_fourier_z2 .and.
      &                                    psi(i,j) .lt. psiorb) then
 *                        ----------------------------------------------
 *                        Evaluate AORSA basis function along field line
@@ -5705,28 +5719,29 @@ c               end if
      &                              + nphi      * phin_lb(nl)
                               El(nl) = exp(zi * psil)
                            end do
-*                     -------------------------------------------------
-*                    fft on lb mesh giving nnodelb modes (nkl1 to nkl2)
-*                     -------------------------------------------------
+*                        -------------------------------------------------
+*                        fft on lb mesh giving nnodelb modes (nkl1 to nkl2)
+*                        -------------------------------------------------
                            call fftn2(El, workl, nnodelb, nlmx,
      &                                            nkldim1, nkldim2, Eln)
 
-*                    --------------------------------------------------
-*                    Evaluate current at lb = 0, or lbprime = lbmax / 2.
-*                    --------------------------------------------------
+*                        --------------------------------------------------
+*                        Evaluate current at lb = 0, or lbprime = lbmax / 2.
+*                        --------------------------------------------------
                            nl = nnodelb0
 
                            Esum = 0.0
                            Jzzsum = 0.0
 
-*                          ------------------------------------------------------
-*                          Calculate sigma_e (l = 0 harmonic) for each k in the
-*                             Fourier expansion along the field line - xklsav(nkl)
-*                          ------------------------------------------------------
+*                        ------------------------------------------------------
+*                        Calculate sigma_e (l = 0 harmonic) for each k in the
+*                           Fourier expansion along the field line - xklsav(nkl)
+*                        ------------------------------------------------------
                            do nkl = nkl1, nkl2
 
                               sige3_new = 0.0
 
+!JCW called for maxwellian sigma=1
                               call sigmad_cql3d_e(i, j, n, m, rho(i,j),
      &                        rho_a,
      &                        gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
@@ -5797,7 +5812,7 @@ c               end if
                         end if !  end if use_fourier_z2 = true and psi .lt. psiorb
 
 
-                        if(use_fourier_z2 .eqv. .false.) then
+                        if(.not.use_fourier_z2) then
 
                            sige3_new = 0.0
 
@@ -5832,7 +5847,7 @@ c               end if
                         end if    !  if   use_fourier_z2 .eq. .false.
 
 
-                        if(use_fourier_z2 .eqv. .true. .and.
+                        if(use_fourier_z2 .and.
      &                                   psi(i,j) .ge. psiorb) then
 
                            sige3_new = 0.0
@@ -5865,7 +5880,7 @@ c               end if
      &                        dKdL_giv, nmax, mmax, .true.,
      &                        ntable, mtable, sige3_new)
 
-                        end if ! use_fourier_z2 .eq. .true. .and. psi.ge. psiorb
+                        end if ! use_fourier_z2 .eqv. .true. .and. psi.ge. psiorb
 
 
 
@@ -5951,7 +5966,7 @@ c               end if
      &                     xkalp, xkbet, xkprl)
 
 
-                        if (eta2 .ne. 0.0) then
+                        if (eta2 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d_2(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi2, qi2, xn2a(i,j), xnuomi,
@@ -6003,7 +6018,7 @@ c               end if
                         end if    !   eta2 .ne. 0.0
 
 
-                        if(eta3 .ne. 0.0) then
+                        if(eta3 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi3, qi3, xn3a(i,j), xnuomi,
@@ -6053,7 +6068,7 @@ c               end if
      &                     xkalp, xkbet, xkprl)
                         end if    !   eta3 .ne. 0.0
 
-                        if(eta4 .ne. 0.0) then
+                        if(eta4 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi4, qi4, xn4a(i,j), xnuomi,
@@ -6104,7 +6119,7 @@ c               end if
 
                         end if     !   eta4 .ne. 0.0
 
-                        if(eta5 .ne. 0.0) then
+                        if(eta5 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi5, qi5, xn5a(i,j), xnuomi,
@@ -6155,7 +6170,7 @@ c               end if
 
                         end if  !  eta5 .ne. 0.0
 
-                        if(eta6 .ne. 0.0) then
+                        if(eta6 >= 100.*epsilon(eta1)) then
                         call sigmad_cql3d(i, j, n, m, rho(i,j), rho_a,
      &                     gradprlb(i,j), bmod(i,j), bmod_mid(i,j),
      &                     xmi6, qi6, xn6a(i,j), xnuomi,
@@ -6206,7 +6221,7 @@ c               end if
 
                         end if  !  eta6 .ne. 0.0
 
-                        if(eta_slo .ne. 0.0)
+                        if(eta_slo >= 100.*epsilon(eta1))
      &                  call sigmah_slow(i, j, n, m,
      &                  xmi_slo, qi_slo, xna_slo(i,j), xnuomi,
      &                  eslow, omgci_slo(i,j), omgp2_slo(i,j),
@@ -6261,7 +6276,7 @@ c               end if
      &                  delta0, zi, eps0, v0i, omgrf, xk0, kperp_max,
      &                  i_sav, j_sav)
 
-                        if(eta2 .ne. 0.0)
+                        if(eta2 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi2, qi2, xn2a(i,j), xnuomi,
      &                  xkti2(i,j), omgci2(i,j), omgp22(i,j),
@@ -6277,7 +6292,7 @@ c               end if
      &                  delta0, zi, eps0, v0i, omgrf, xk0, kperp_max,
      &                  i_sav, j_sav)
 
-                        if(eta3 .ne. 0.0)
+                        if(eta3 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi3, qi3, xn3a(i,j), xnuomi,
      &                  xkti3(i,j), omgci3(i,j), omgp32(i,j),
@@ -6294,7 +6309,7 @@ c               end if
      &                  i_sav, j_sav)
 
 
-                        if(eta4 .ne. 0.0)
+                        if(eta4 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi4, qi4, xn4a(i,j), xnuomi,
      &                  xkti4(i,j), omgci4(i,j), omgp42(i,j),
@@ -6310,7 +6325,7 @@ c               end if
      &                  delta0, zi, eps0, v0i, omgrf, xk0, kperp_max,
      &                  i_sav, j_sav)
 
-                        if(eta5 .ne. 0.0)
+                        if(eta5 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi5, qi5, xn5a(i,j), xnuomi,
      &                  xkti5(i,j), omgci5(i,j), omgp52(i,j),
@@ -6326,7 +6341,7 @@ c               end if
      &                  delta0, zi, eps0, v0i, omgrf, xk0, kperp_max,
      &                  i_sav, j_sav)
 
-                        if(eta6 .ne. 0.0)
+                        if(eta6 >= 100.*epsilon(eta1))
      &                  call sigmac_stix(i, j, n, m,
      &                  xmi6, qi6, xn6a(i,j), xnuomi,
      &                  xkti6(i,j), omgci6(i,j), omgp62(i,j),
@@ -6524,11 +6539,12 @@ c               end if
 *                 --------------------------
 *                 metal boundary edge region:
 *                 --------------------------
-                  if(psi(i,j) .gt. psilim .and. nboundary .eq. 1
+                  if(     psi(i,j) .gt. psilim .and. nboundary .eq. 1
+     &               .or. psi(i,j) .lt. psifcf .and. nboundary .eq. 1
      &               .or. nboundary .eq. 0 .and. i .eq. 1
      &               .or. nboundary .eq. 0 .and. i .eq. nnodex
      &               .or. nboundary .eq. 0 .and. j .eq. 1
-     &               .or. nboundary .eq. 0 .and. j .eq. nnodey) then
+     &               .or. nboundary .eq. 0 .and. j .eq. nnodey) then !JCW add core boundary
 
 c                      if(psi(i,j) .gt. psilim .and. nboundary .eq. 1
 c     &               .or. nboundary .eq. 0 .and. i .le. 2
@@ -6708,7 +6724,7 @@ c        call flush
      &       desc_amat, incX )
 
         alpha = 1.0
-        if (norm2 .ne. 0.0) alpha = 1.0/norm2
+        if (norm2 >= 100.*epsilon(eta1)) alpha = 1.0/norm2
 
         call pzscal ( ncol, alpha, p_amat, global_row, global_col,
      &       desc_amat, incX )
@@ -6770,15 +6786,13 @@ c        call flush
 *       ------------------------------
 *       Optional: get condition number
 *       ------------------------------
-       lwork = ndfmax
-       lrwork = ndfmax
       anorm = pzlange('1', nrow, ncol, p_amat, 1, 1, desc_amat, rwork)
       call pzgecon('1', nrow, p_amat, 1, 1, desc_amat, anorm, rcond,
      &          workn, lwork, rwork, lrwork, info)
 
       if (info.ne.0) then
-         write(6,*) 'pzgecon returns info = ', info
-         write(15,*) 'pzgecon returns info = ', info
+         write(6,*) 'pzgecon returns info = ', info,lwork,lrwork
+         write(15,*) 'pzgecon returns info = ', info,lwork,lrwork
          stop '** error ** '
       endif
 
@@ -6971,7 +6985,7 @@ c      deallocate(Btmp)
 
 
 
-      if (anti_alias .eqv. .true.) then
+      if (anti_alias) then
 *        --------------------------------------
 *        Anti-aliasing filter (two-thirds rule):
 *        --------------------------------------
@@ -7101,8 +7115,8 @@ c     &   myid, nproc, icontxt)
 
 
       do i = 1, nnodex
-         kimag_slow(i) = aimag(csqrt(xkperp2_slow(i,jmid)))
-         kimag_fast(i) = aimag(csqrt(xkperp2_fast(i,jmid)))
+         kimag_slow(i) = aimag(sqrt(xkperp2_slow(i,jmid)))
+         kimag_fast(i) = aimag(sqrt(xkperp2_fast(i,jmid)))
       end do
 
       call dgrate(xprime, kimag_slow, 1, nnodex, ans, nxmx)
@@ -7503,7 +7517,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 *     ---------------------------------
 *     set artificial absorption to zero
 *     ---------------------------------
-      if (use_no_damp .eqv. .true.)then
+      if (use_no_damp) then
          delta0 = 0.0
          damping = 0.0
       end if
@@ -7602,7 +7616,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
 
 
-      if(eta2 .ne. 0.0) then
+      if(eta2 >= 100.*epsilon(eta1)) then
 
          call current_2(xjpx2, xjpy2, xjpz2, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7625,7 +7639,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
       endif
 
-      if(eta3 .ne. 0.0) then
+      if(eta3 >= 100.*epsilon(eta1)) then
 
          call current(xjpx3, xjpy3, xjpz3, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7648,7 +7662,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
       endif
 
-      if(eta4 .ne. 0.0) then
+      if(eta4 >= 100.*epsilon(eta1)) then
 
          call current(xjpx4, xjpy4, xjpz4, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7671,7 +7685,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
       endif
 
-      if(eta5 .ne. 0.0) then
+      if(eta5 >= 100.*epsilon(eta1)) then
 
          call current(xjpx5, xjpy5, xjpz5, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7694,7 +7708,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
 
       endif
 
-      if(eta6 .ne. 0.0) then
+      if(eta6 >= 100.*epsilon(eta1)) then
 
          call current(xjpx6, xjpy6, xjpz6, nxmx, nymx, nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7718,7 +7732,7 @@ c                     if (upshift .eq. 0) xkprl = nphi / rt
       endif
 
 
-      if(eta_slo .ne. 0.0)
+      if(eta_slo >= 100.*epsilon(eta1))
      &   call cur_slo(xj_slox, xj_sloy, xj_sloz, nxmx, nymx,
      &   nnodex, nnodey,
      &   nkx1, nkx2, nky1, nky2, nkdim1, nkdim2, mkdim1, mkdim2,
@@ -7873,7 +7887,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       fqlavg_work = 0.0
 
 
-      if(eta2 .ne. 0.0)then
+      if(eta2 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i2(nuper, nupar, nnoderho) )
          allocate( cqlavg_i2(nuper, nupar, nnoderho) )
          allocate( eqlavg_i2(nuper, nupar, nnoderho) )
@@ -7884,7 +7898,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
          fqlavg_i2 = 0.0
       end if
 
-      if(eta3 .ne. 0.0)then
+      if(eta3 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i3(nuper, nupar, nnoderho) )
          allocate( cqlavg_i3(nuper, nupar, nnoderho) )
          allocate( eqlavg_i3(nuper, nupar, nnoderho) )
@@ -7895,7 +7909,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
          fqlavg_i3 = 0.0
       end if
 
-      if(eta4 .ne. 0.0)then
+      if(eta4 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i4(nuper, nupar, nnoderho) )
          allocate( cqlavg_i4(nuper, nupar, nnoderho) )
          allocate( eqlavg_i4(nuper, nupar, nnoderho) )
@@ -7906,7 +7920,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
          fqlavg_i4 = 0.0
       end if
 
-      if(eta5 .ne. 0.0)then
+      if(eta5 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i5(nuper, nupar, nnoderho) )
          allocate( cqlavg_i5(nuper, nupar, nnoderho) )
          allocate( eqlavg_i5(nuper, nupar, nnoderho) )
@@ -7917,7 +7931,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
          fqlavg_i5 = 0.0
       end if
 
-      if(eta6 .ne. 0.0)then
+      if(eta6 >= 100.*epsilon(eta1))then
          allocate( bqlavg_i6(nuper, nupar, nnoderho) )
          allocate( cqlavg_i6(nuper, nupar, nnoderho) )
          allocate( eqlavg_i6(nuper, nupar, nnoderho) )
@@ -7963,7 +7977,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
      &   n_bin, upshift, i_write, xk_cutoff)
 
 
-      if (use_new_wdot .eqv. .true.) then
+      if (use_new_wdot) then
          call wdot_new_maxwellian(z2_electron,
      &   wdote, darea, nrhomax, nnoderho, drho,
      &   dx, dy, rt, nxmx, nymx, nnodex, nnodey,
@@ -8033,7 +8047,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
      &   n_bin, upshift, i_write, xk_cutoff)
 
 
-      if (use_new_wdot .eqv. .true.) then
+      if (use_new_wdot) then
          call wdot_new_maxwellian(z2_electron,
      &   wdoti1,
      &   darea, nrhomax, nnoderho, drho,
@@ -8074,7 +8088,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Minority ions -- !
       ! ------------------ !
 
-      if(eta2 .ne. 0.0)then
+      if(eta2 >= 100.*epsilon(eta1))then
       t1i2 = second1(dummy)
       call ql_myra_write(bqlavg_i2, cqlavg_i2, eqlavg_i2, fqlavg_i2,
      &   wdoti2, fx0i2, fy0i2, fz0i2, darea, nrhomax, nnoderho, drho,
@@ -8099,7 +8113,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
      &   n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg,
      &   n_bin, upshift, i_write, xk_cutoff)
 
-      if (use_new_wdot .eqv. .true.) then
+      if (use_new_wdot) then
          call wdot_new_maxwellian(z2_electron,
      &   wdoti2,
      &   darea, nrhomax, nnoderho, drho,
@@ -8141,7 +8155,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Third ion species-- !
       ! --------------------- !
 
-      if(eta3 .ne. 0.0)then
+      if(eta3 >= 100.*epsilon(eta1))then
       t1i3 = second1(dummy)
       call ql_myra_write(bqlavg_i3, cqlavg_i3, eqlavg_i3, fqlavg_i3,
      &   wdoti3, fx0i3, fy0i3, fz0i3, darea, nrhomax, nnoderho, drho,
@@ -8166,7 +8180,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
      &   n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg,
      &   n_bin, upshift, i_write, xk_cutoff)
 
-      if (use_new_wdot .eqv. .true.) then
+      if (use_new_wdot) then
          call wdot_new_maxwellian(z2_electron,
      &   wdoti3,
      &   darea, nrhomax, nnoderho, drho,
@@ -8210,7 +8224,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Fourth ion species-- !
       ! ---------------------- !
 
-      if(eta4 .ne. 0.0)then
+      if(eta4 >= 100.*epsilon(eta1))then
       t1i4 = second1(dummy)
       call ql_myra_write(bqlavg_i4, cqlavg_i4, eqlavg_i4, fqlavg_i4,
      &   wdoti4, fx0i4, fy0i4, fz0i4, darea, nrhomax, nnoderho, drho,
@@ -8235,7 +8249,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
      &   n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg,
      &   n_bin, upshift, i_write, xk_cutoff)
 
-      if (use_new_wdot .eqv. .true.) then
+      if (use_new_wdot) then
          call wdot_new_maxwellian(z2_electron,
      &   wdoti4,
      &   darea, nrhomax, nnoderho, drho,
@@ -8277,7 +8291,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Fifth ion species-- !
       ! --------------------- !
 
-      if(eta5 .ne. 0.0)then
+      if(eta5 >= 100.*epsilon(eta1))then
       t1i5 = second1(dummy)
       call ql_myra_write(bqlavg_i5, cqlavg_i5, eqlavg_i5, fqlavg_i5,
      &   wdoti5, fx0i5, fy0i5, fz0i5, darea, nrhomax, nnoderho, drho,
@@ -8302,7 +8316,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
      &   n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg,
      &   n_bin, upshift, i_write, xk_cutoff)
 
-      if (use_new_wdot .eqv. .true.) then
+      if (use_new_wdot) then
          call wdot_new_maxwellian(z2_electron,
      &   wdoti5,
      &   darea, nrhomax, nnoderho, drho,
@@ -8345,7 +8359,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Sixth ion species-- !
       ! --------------------- !
 
-      if(eta6 .ne. 0.0)then
+      if(eta6 >= 100.*epsilon(eta1))then
       t1i6 = second1(dummy)
       call ql_myra_write(bqlavg_i6, cqlavg_i6, eqlavg_i6, fqlavg_i6,
      &   wdoti6, fx0i6, fy0i6, fz0i6, darea, nrhomax, nnoderho, drho,
@@ -8370,7 +8384,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
      &   n_theta_max, n_psi_max, i_psi_eq, n_theta_, dldbavg,
      &   n_bin, upshift, i_write, xk_cutoff)
 
-      if (use_new_wdot .eqv. .true.) then
+      if (use_new_wdot) then
          call wdot_new_maxwellian(z2_electron,
      &   wdoti6,
      &   darea, nrhomax, nnoderho, drho,
@@ -8461,7 +8475,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Minority ions -- !
       ! ------------------ !
 
-      if(eta2 .ne. 0.0)then
+      if(eta2 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti2_ql,
      &   nnoderho, nrhomax,
@@ -8480,7 +8494,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Third ion species-- !
       ! --------------------- !
 
-      if(eta3 .ne. 0.0)then
+      if(eta3 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti3_ql,
      &   nnoderho, nrhomax,
@@ -8497,7 +8511,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Fourth ion species-- !
       ! --------------------- !
 
-      if(eta4 .ne. 0.0)then
+      if(eta4 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti4_ql,
      &   nnoderho, nrhomax,
@@ -8514,7 +8528,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Fifth ion species-- !
       ! --------------------- !
 
-      if(eta5 .ne. 0.0)then
+      if(eta5 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti5_ql,
      &   nnoderho, nrhomax,
@@ -8531,7 +8545,7 @@ c           ntilda_e(i,j) = rho_pla(i,j) / qe
       ! --Sixth ion species-- !
       ! --------------------- !
 
-      if(eta6 .ne. 0.0)then
+      if(eta6 >= 100.*epsilon(eta1))then
 
       call wdot_qlcheck(wdoti6_ql,
      &   nnoderho, nrhomax,
@@ -8656,7 +8670,7 @@ c                   rhohaty(i,j) = drhody / gradrho
      1                         conjg(ex(i,j)) * bzwave(i,j)
      1                       - conjg(ez(i,j)) * bxwave(i,j)  )
 
-c                  dspxdx(i) = 1. / (2. * xmu0 * omgrf) * imag(
+c                  dspxdx(i) = 1. / (2. * xmu0 * omgrf) * aimag(
 c    1                conjg(deydx(i)) * (deydx(i) - zi * xky * ex(i))
 c    1              + conjg(ey(i)) * (d2eydx(i) - zi * xky * dexdx(i))
 c    1              + conjg(dezdx(i)) * (dezdx(i) - zi * xkz * ex(i))
@@ -8703,7 +8717,7 @@ c     &                    + uzz(i, j) * xkphi(i)
 
             c_ehst = 0.0
 
-            if(xkte(i, j) .ne. 0.0) then
+            if(xkte(i, j) >= 100.*epsilon(eta1)) then
 
                xlnlam = 24. - alog(sqrt(xnea(i, j)
      &                     /1.e+06) / (xkte(i, j)/ abs(qe)))
@@ -8837,12 +8851,12 @@ c                 c_ehst = 1.0
 *     ------------------
 *     Normalize to jdote:
 *     ------------------
-      if(norm .eq. 1)powtot = 2.0 * pi * rt * ptot
+      if(norm .eq. 1)powtot = twopi * rt * ptot
 
 *     -----------------
 *     Normalize to wdot:
 *     -----------------
-      if(norm .eq. 2)powtot = 2.0 * pi * rt * ptot_wdot
+      if(norm .eq. 2)powtot = twopi * rt * ptot_wdot
 
 *     --------------------
 *     Normalize to wdot_ql:
@@ -8850,7 +8864,7 @@ c                 c_ehst = 1.0
       if(norm .eq. 3)powtot = pt_ql
 
 
-      if (powtot .ne. 0.0) pscale = prfin / powtot
+      if (powtot >= 100.*epsilon(eta1)) pscale = prfin / powtot
       if (powtot .eq. 0.0) pscale = 1.0
 
       if (prfin .eq. 0.0) pscale = 1.0
@@ -8900,6 +8914,7 @@ c                 c_ehst = 1.0
       xjx = xjx * sqrt(pscale)
       xjy = xjy * sqrt(pscale)
       xjz = xjz * sqrt(pscale)
+      xjt = sqrt(xjx**2+xjy**2+xjz**2)
 
       do n = nkx1, nkx2
          do m = nky1, nky2
@@ -9054,35 +9069,35 @@ c                 c_ehst = 1.0
                eqlavg_i1(niu, miu, n) = eqlavg_i1(niu, miu, n) * pscale
                fqlavg_i1(niu, miu, n) = fqlavg_i1(niu, miu, n) * pscale
 
-               if(eta2 .ne. 0.0)then
+               if(eta2 >= 100.*epsilon(eta1))then
                bqlavg_i2(niu, miu, n) = bqlavg_i2(niu, miu, n) * pscale
                cqlavg_i2(niu, miu, n) = cqlavg_i2(niu, miu, n) * pscale
                eqlavg_i2(niu, miu, n) = eqlavg_i2(niu, miu, n) * pscale
                fqlavg_i2(niu, miu, n) = fqlavg_i2(niu, miu, n) * pscale
                end if
 
-               if(eta3 .ne. 0.0)then
+               if(eta3 >= 100.*epsilon(eta1))then
                bqlavg_i3(niu, miu, n) = bqlavg_i3(niu, miu, n) * pscale
                cqlavg_i3(niu, miu, n) = cqlavg_i3(niu, miu, n) * pscale
                eqlavg_i3(niu, miu, n) = eqlavg_i3(niu, miu, n) * pscale
                fqlavg_i3(niu, miu, n) = fqlavg_i3(niu, miu, n) * pscale
                end if
 
-               if(eta4 .ne. 0.0)then
+               if(eta4 >= 100.*epsilon(eta1))then
                bqlavg_i4(niu, miu, n) = bqlavg_i4(niu, miu, n) * pscale
                cqlavg_i4(niu, miu, n) = cqlavg_i4(niu, miu, n) * pscale
                eqlavg_i4(niu, miu, n) = eqlavg_i4(niu, miu, n) * pscale
                fqlavg_i4(niu, miu, n) = fqlavg_i4(niu, miu, n) * pscale
                end if
 
-               if(eta5 .ne. 0.0)then
+               if(eta5 >= 100.*epsilon(eta1))then
                bqlavg_i5(niu, miu, n) = bqlavg_i5(niu, miu, n) * pscale
                cqlavg_i5(niu, miu, n) = cqlavg_i5(niu, miu, n) * pscale
                eqlavg_i5(niu, miu, n) = eqlavg_i5(niu, miu, n) * pscale
                fqlavg_i5(niu, miu, n) = fqlavg_i5(niu, miu, n) * pscale
                end if
 
-               if(eta6 .ne. 0.0)then
+               if(eta6 >= 100.*epsilon(eta1))then
                bqlavg_i6(niu, miu, n) = bqlavg_i6(niu, miu, n) * pscale
                cqlavg_i6(niu, miu, n) = cqlavg_i6(niu, miu, n) * pscale
                eqlavg_i6(niu, miu, n) = eqlavg_i6(niu, miu, n) * pscale
@@ -9130,7 +9145,7 @@ c                 c_ehst = 1.0
          do niu = 1, nuper
             do miu = 1, nupar
 
-               if(xnavg(n) .ne. 0.0)then
+               if(xnavg(n) >= 100.*epsilon(eta1))then
                bqlavg_e(niu, miu, n) = bqlavg_e(niu, miu, n) / xnavg(n)
      &            * vce_cgs**4 * 100.
                cqlavg_e(niu, miu, n) = cqlavg_e(niu, miu, n) / xnavg(n)
@@ -9147,7 +9162,7 @@ c                 c_ehst = 1.0
                   fqlavg_e(niu, miu, n) = 0.
                end if
 
-               if(xn1avg(n) .ne. 0.0)then
+               if(xn1avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i1(niu, miu, n)= bqlavg_i1(niu, miu, n)/ xn1avg(n)
      &            * vc1_cgs**4 * 100.
                cqlavg_i1(niu, miu, n)= cqlavg_i1(niu, miu, n)/ xn1avg(n)
@@ -9164,8 +9179,8 @@ c                 c_ehst = 1.0
                   fqlavg_i1(niu, miu, n)= 0.
                end if
 
-               if(eta2 .ne. 0.0)then
-               if(xn2avg(n) .ne. 0.0)then
+               if(eta2 >= 100.*epsilon(eta1))then
+               if(xn2avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i2(niu, miu, n)= bqlavg_i2(niu, miu, n)/ xn2avg(n)
      &            * vc2_cgs**4 * 100.
                cqlavg_i2(niu, miu, n)= cqlavg_i2(niu, miu, n)/ xn2avg(n)
@@ -9184,8 +9199,8 @@ c                 c_ehst = 1.0
                end if
 
 
-               if(eta3 .ne. 0.0)then
-               if(xn3avg(n) .ne. 0.0)then
+               if(eta3 >= 100.*epsilon(eta1))then
+               if(xn3avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i3(niu, miu, n)= bqlavg_i3(niu, miu, n)/ xn3avg(n)
      &            * vc3_cgs**4 * 100.
                cqlavg_i3(niu, miu, n)= cqlavg_i3(niu, miu, n)/ xn3avg(n)
@@ -9204,8 +9219,8 @@ c                 c_ehst = 1.0
                end if
 
 
-               if(eta4 .ne. 0.0)then
-               if(xn4avg(n) .ne. 0.0)then
+               if(eta4 >= 100.*epsilon(eta1))then
+               if(xn4avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i4(niu, miu, n)= bqlavg_i4(niu, miu, n)/ xn4avg(n)
      &            * vc4_cgs**4 * 100.
                cqlavg_i4(niu, miu, n)= cqlavg_i4(niu, miu, n)/ xn4avg(n)
@@ -9223,8 +9238,8 @@ c                 c_ehst = 1.0
                end if
                end if
 
-               if(eta5 .ne. 0.0)then
-               if(xn5avg(n) .ne. 0.0)then
+               if(eta5 >= 100.*epsilon(eta1))then
+               if(xn5avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i5(niu, miu, n)= bqlavg_i5(niu, miu, n)/ xn5avg(n)
      &            * vc5_cgs**4 * 100.
                cqlavg_i5(niu, miu, n)= cqlavg_i5(niu, miu, n)/ xn5avg(n)
@@ -9242,8 +9257,8 @@ c                 c_ehst = 1.0
                end if
                end if
 
-               if(eta6 .ne. 0.0)then
-               if(xn6avg(n) .ne. 0.0)then
+               if(eta6 >= 100.*epsilon(eta1))then
+               if(xn6avg(n) >= 100.*epsilon(eta1))then
                bqlavg_i6(niu, miu, n)= bqlavg_i6(niu, miu, n)/ xn6avg(n)
      &            * vc6_cgs**4 * 100.
                cqlavg_i6(niu, miu, n)= cqlavg_i6(niu, miu, n)/ xn6avg(n)
@@ -9270,9 +9285,9 @@ c                 c_ehst = 1.0
 *     Interpolate quasilinear coefficients onto the CQL3D grid
 *     --------------------------------------------------------
 
-      if(enorm_factor .ne. 0.0) then
+      if(enorm_factor >= 100.*epsilon(eta1)) then
 
-          if(eta1 .ne. 0.0 .and. ndisti1 .eq. 1)then
+          if(eta1 >= 100.*epsilon(eta1) .and. ndisti1 .eq. 1)then
 
             vperp = uperp * vc1_mks
             vpara = upara * vc1_mks
@@ -9315,7 +9330,7 @@ c                 c_ehst = 1.0
 
 
 
-         if(eta2 .ne. 0.0 .and. ndisti2 .eq. 1) then
+         if(eta2 >= 100.*epsilon(eta1) .and. ndisti2 .eq. 1) then
 
             vperp = uperp * vc2_mks
             vpara = upara * vc2_mks
@@ -9441,7 +9456,7 @@ c                 c_ehst = 1.0
 *        ----------------------------------------------------------------
 *        Write quasilinear diffusion coefficients to file out_cql3d.coef2
 *        ----------------------------------------------------------------
-         if(eta2 .ne. 0.0 .and. ndisti2 .eq. 1)then
+         if(eta2 >= 100.*epsilon(eta1) .and. ndisti2 .eq. 1)then
 
             write (42, 309) nuper
             write (42, 309) nupar
@@ -9476,7 +9491,7 @@ c                 c_ehst = 1.0
 *        ----------------------------------------------------------------
 *        Write quasilinear diffusion coefficients to file out_cql3d.coef3
 *        ----------------------------------------------------------------
-         if(eta3 .ne. 0.0 .and. ndisti3 .eq. 1)then
+         if(eta3 >= 100.*epsilon(eta1) .and. ndisti3 .eq. 1)then
 
             write (43, 309) nuper
             write (43, 309) nupar
@@ -9512,7 +9527,7 @@ c                 c_ehst = 1.0
 *        ----------------------------------------------------------------
 *        Write quasilinear diffusion coefficients to file out_cql3d.coef4
 *        ----------------------------------------------------------------
-         if(eta4 .ne. 0.0 .and. ndisti4 .eq. 1)then
+         if(eta4 >= 100.*epsilon(eta1) .and. ndisti4 .eq. 1)then
 
             write (44, 309) nuper
             write (44, 309) nupar
@@ -9563,8 +9578,9 @@ c                 c_ehst = 1.0
       t1 = second1(dummy)
 *     ------------------------------------------------------------------------
 *     calculate individual species edotj's and driven current on solution mesh
+*     P = E*.J
 *     ------------------------------------------------------------------------
-
+ 
       do i = 1, nnodex
          do j = 1, nnodey
             redotje(i, j) = 0.5 * real(conjg(ealpha(i, j)) * xjpxe(i, j)
@@ -9647,7 +9663,7 @@ c           if(nnode_local .le. 0)xjprl(i,j) = redotj_ehst(i,j)
       call sgrator(x, y, redotjt, 1, nnodex, 1, nnodey, pedotjt,
      &   capr, rt, nxmx, nymx)
 
-      call sgrator1(x, y, xjy, 1, nnodex, 1, nnodey, i_ant,
+      call sgrator1(x, y, xjt, 1, nnodex, 1, nnodey, i_ant, !xjy
      &   capr, rt, nxmx, nymx, j_cur_max)
 
       call sgrator(x, y, xjprl, 1, nnodex, 1, nnodey, xjtot,
@@ -10172,7 +10188,7 @@ c            uzeta(i,j) = jhat(i,j) / rhom1(i,j)
 
          f_wdot_edge = 0.0
          f_wdot_core = 0.0
-         if (ptot_wdot .ne. 0.0) then
+         if (ptot_wdot >= 100.*epsilon(eta1)) then
             f_wdot_edge = wdot_edge / ptot_wdot * 100.0
             f_wdot_core = wdot_core / ptot_wdot * 100.0
          end if
@@ -10306,7 +10322,7 @@ c            uzeta(i,j) = jhat(i,j) / rhom1(i,j)
 
 
 c--      Calculate species fractions from Wdot:
-         if (pt .ne. 0.0) then
+         if (pt >= 100.*epsilon(eta1)) then
             pcte =   pe / pt  * 100.
             pcti1 =  pi1 / pt * 100.
             pcti2 =  pi2 / pt * 100.
@@ -10371,7 +10387,7 @@ c        pt_ql  = pe_ql + pi1_ql + pi2_ql + pi3_ql
 c     &                   + pi4_ql +pi5_ql + pi6_ql
 
 
-         if (pt_ql .ne. 0.0) then
+         if (pt_ql >= 100.*epsilon(eta1)) then
             pcte_ql =   pe_ql / pt_ql  * 100.
             pcti1_ql =  pi1_ql / pt_ql * 100.
             pcti2_ql =  pi2_ql / pt_ql * 100.
@@ -10435,7 +10451,7 @@ c         do i = 1, nnodex
 c            do j = 1, nnodey
 c               n = int(rho(i,j) / drho) + 1
 c               if(n .lt. nnoderho)then
-c                  dvol(n)  =  dvol(n) + dx * dy * 2.0 * pi * capr(i)
+c                  dvol(n)  =  dvol(n) + dx * dy * twopi * capr(i)
 c                 darea(n) = darea(n) + dx * dy * capr(i) / rt
 c               end if
 c            end do
@@ -10553,7 +10569,7 @@ c         end do
 
 
          do n = nkx1, nkx2
-            write(6, *) "n = ", n, "xkb(64, n) = ", xkb(64, n)
+            write(6, *) "n = ",n,"xkb(nnodex/2, n) = ",xkb(nnodex/2, n)
          end do
 
          write(38, 309) nnoderho
@@ -10818,7 +10834,7 @@ c         end do
          write(38, 310) ((ftheta0(i, j), i = 1, nnodex), j = 1, nnodey)
          write(38, 310) ((pressi(i,j), i = 1, nnodex), j = 1, nnodey)
          write(38, 310) ((dldb_tot12(i, j), i = 1, nnodex),
-     &                                      j = 1, nnodey)
+     &                                       j = 1, nnodey)
 
          write (38, 309) ndisti1, ndisti2, ndisti3
 
@@ -10853,7 +10869,6 @@ c         end do
          write(38, 310) ((dxxuyy(i,j), i = 1, nnodex), j = 1, nnodey)
          write(38, 310) ((dyyuzz(i,j), i = 1, nnodex), j = 1, nnodey)
          write(38, 310) ((gradprlb(i,j), i = 1, nnodex), j = 1, nnodey)
-
          write(38, 310) ((xkperp2_slow(i, j), i = 1, nnodex),
      &      j = 1, nnodey)
          write(38, 310) ((xkperp2_fast(i, j), i = 1, nnodex),
@@ -11075,7 +11090,9 @@ c      write(6,*) "finished plots; starting deallocation"
      1   1p,e12.4," ohms     ")
  2013 format(3x,
      1   "2*pi*rt/Ly * imaginary part of impedance (reactance) = ",
-     1   1p,e12.4," ohms     ")
+     1     1p,e12.4," ohms     ")
+ 2222 format(3x,A18," = ",1pe12.4,1X,A)
+ 2223 format(3x,A18," = ",i12,1X,A)      
  1014 format(3x,"               xkz = ",1p,e12.4," m-1   ")
  1321 format(3x,"         vph / vth = ",1p,e12.4,"       ")
  1391 format(3x," critical shear(0) = ",1p,e12.4," s-1   ")
@@ -11352,17 +11369,7 @@ c        close (15)
 
 
 
-!efd-begin
-c      if (myid.eq.0) then
-c      call profstat()
-c      endif
-!efd-end
-
-
       call blacs_barrier(icontxt, 'All')
-
-
-      close(5)
 
 
       if (myid.eq.0) then
@@ -11450,35 +11457,35 @@ c      endif
          deallocate( eqlavg_i1 )
          deallocate( fqlavg_i1 )
 
-         if(eta2 .ne. 0.0) then
+         if(eta2 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i2 )
             deallocate( cqlavg_i2 )
             deallocate( eqlavg_i2 )
             deallocate( fqlavg_i2 )
          end if
 
-         if(eta3 .ne. 0.0) then
+         if(eta3 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i3 )
             deallocate( cqlavg_i3 )
             deallocate( eqlavg_i3 )
             deallocate( fqlavg_i3 )
          end if
 
-         if(eta4 .ne. 0.0) then
+         if(eta4 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i4 )
             deallocate( cqlavg_i4 )
             deallocate( eqlavg_i4 )
             deallocate( fqlavg_i4 )
          end if
 
-         if(eta5 .ne. 0.0) then
+         if(eta5 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i5 )
             deallocate( cqlavg_i5 )
             deallocate( eqlavg_i5 )
             deallocate( fqlavg_i5 )
          end if
 
-         if(eta6 .ne. 0.0) then
+         if(eta6 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i6 )
             deallocate( cqlavg_i6 )
             deallocate( eqlavg_i6 )
@@ -11570,35 +11577,35 @@ c      endif
          deallocate( eqlavg_i1 )
          deallocate( fqlavg_i1 )
 
-         if(eta2 .ne. 0.0) then
+         if(eta2 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i2 )
             deallocate( cqlavg_i2 )
             deallocate( eqlavg_i2 )
             deallocate( fqlavg_i2 )
          end if
 
-         if(eta3 .ne. 0.0) then
+         if(eta3 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i3 )
             deallocate( cqlavg_i3 )
             deallocate( eqlavg_i3 )
             deallocate( fqlavg_i3 )
          end if
 
-         if(eta4 .ne. 0.0) then
+         if(eta4 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i4 )
             deallocate( cqlavg_i4 )
             deallocate( eqlavg_i4 )
             deallocate( fqlavg_i4 )
          end if
 
-         if(eta5 .ne. 0.0) then
+         if(eta5 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i5 )
             deallocate( cqlavg_i5 )
             deallocate( eqlavg_i5 )
             deallocate( fqlavg_i5 )
          end if
 
-         if(eta6 .ne. 0.0) then
+         if(eta6 >= 100.*epsilon(eta1)) then
             deallocate( bqlavg_i6 )
             deallocate( cqlavg_i6 )
             deallocate( eqlavg_i6 )
@@ -11607,7 +11614,7 @@ c      endif
 
       end if
 
-      if (read_solution .eqv. .false.) then
+      if (.not.read_solution) then
 
 c         deallocate( new_to_org )
 
@@ -11752,7 +11759,10 @@ c         deallocate( ntable )
       deallocate (xkprl_a, P_a)
       deallocate (work)
       deallocate (workc)
-
+!if not static
+      deallocate (workn)
+      deallocate (rwork)
+!fi
       if (myid .eq. 0) then
          close (963)
          close (34)
@@ -11777,7 +11787,7 @@ c         deallocate( ntable )
          close (65)
       endif
 
-      close(6)
+!stderr, cannot close      close(6)
 
 *     -------------------------
 *     stop parallel environment
@@ -11850,7 +11860,7 @@ c
 
       do n = 1, nnoderho
          favg(n) = 0.0
-         if(vol(n) .ne. 0.0)favg(n) = fvol(n) / vol(n)
+         if(vol(n) >= 1.e-10) favg(n) = fvol(n) / vol(n)
       end do
 
       do n = 2, nnoderho - 1
@@ -11908,7 +11918,7 @@ c
       real :: f(nxdim), x(nxdim), ans(nxdim), dvol(nxdim)
 
       ans(nx1) = 0.0
-
+!jcw assumes nx2<nxdim
       do n = nx1, nx2 - 1
 
          ans(n+1) = ans(n) + (f(n) * dvol(n) + f(n+1) * dvol(n+1)) / 2.
@@ -11923,3 +11933,31 @@ c
 c
 c***************************************************************************
 c
+
+      function factrl(n)
+      integer:: n
+      real:: factrl
+
+      integer:: j, ntop
+      integer, parameter:: maxsave=100
+      real:: a(maxsave)
+      save:: ntop, a
+      data ntop, a(1)/0, 1./
+
+      if (n < 0)stop 'factrl is called with negative integer'
+
+      if(n <= ntop) then
+         factrl = a(n+1)
+      else if(n <= maxsave-1) then
+         do j = ntop+1, n
+            a(j+1) = j * a(j)
+         end do
+         ntop = n
+         factrl = a(n+1)
+      else
+         factrl = gamma(n+1.)
+      end if
+
+      return
+      end
+      
